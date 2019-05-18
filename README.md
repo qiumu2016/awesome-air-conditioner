@@ -1,4 +1,4 @@
-# awwsome-air-conditioner
+# awesome-air-conditioner
 ## 环境
 
 ```c#
@@ -8,7 +8,7 @@ node.js >= 10
 
 
 
-##前端
+## 前端
 
 ```c++
 //Vue
@@ -35,5 +35,5 @@ see `/doc`
 ## 协作者
 
 > [Qiumu2016](https://github.com/qiumu2016)
->
-> 
+> [SharpenRoll](https://github.com/SharpenRoll)
+> [FishClover](https://github.com/FishClover)
