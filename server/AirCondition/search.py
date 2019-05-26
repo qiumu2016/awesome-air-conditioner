@@ -2,14 +2,49 @@ from django.http.response import JsonResponse
 from django.shortcuts import render_to_response
 
 class conditioner:
-    def __init__(self,Mode,Temp_highLimit,Temp_lowLimit,default_TargetTemp,FeeRate_H,FeeRate_M,FeeRate_L):
-        self.Mode = Mode
-        self.Temp_highLimit = 30
-        self.Temp_lowLimit = 10
-        self.default_TargetTemp = 20
-        self.FeeRate_H = 0.75
-        self.FeeRate_M = 0.5
-        self.FeeRate_L = 0.25
+    def __init__(self):
+        self.mode = 'cold'
+        self.tempHighLimit = 30
+        self.tempLowLimit = 10
+        self.defaultTargetTemp = 20
+        self.feeRateH = 0.75
+        self.feeRateM = 0.5
+        self.feeRateL = 0.25
+        self.numRooms = 4
+        self.numServe= 3
+
+    def startUp(self):
+        response = {}
+        response['state'] = 'ok'
+        return JsonResponse(response)
+
+    def setPara(self):
+        response = {}
+        self.startUp()
+        response['state'] = 'ok'
+        return JsonResponse(response)
+
+    def powerOn (self):
+        response = {}
+        self.setPara()
+        response['state'] = 'ok'
+        return JsonResponse(response)
+
+class room:
+    def __init__(self,roomid):
+        self.roomid = roomid
+        self.isCheckIn = 0
+        self.isOpen = 0
+        self.isServing = 0
+        self.wind = 'low'
+        self.currentTemp = 27
+        self.targetTemp = 27
+        self.feeRate= 0.25
+        self.fee = 0
+
+    def checkRoomState(self,request):
+        response = {}
+        return JsonResponse(response)
 
 def requestOn(self,request):
     response = {}
@@ -47,22 +82,13 @@ def printInvoice(self,request):
     response = {}
     return JsonResponse(response)
 
-def powerOn ():
-    response = {}
-    response['state'] = 'ok'
-    return JsonResponse(response)
 
-def setPara(self,request):
-    response = {}
-    return JsonResponse(response)
 
-def startUp(self,request):
-    response = {}
-    return JsonResponse(response)
 
-def checkRoomState(self,request):
-    response = {}
-    return JsonResponse(response)
+
+
+
+
 
 def queryReport(self,request):
     response = {}
