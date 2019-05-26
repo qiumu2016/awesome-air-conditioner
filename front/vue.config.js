@@ -2,7 +2,11 @@
 module.exports = {
     // 修改的配置
     // 将baseUrl: '/api',改为baseUrl: '/',
-    baseUrl: '/',
+    // 改为'./'
+    // 将baseUrl改为publicPath以解决build中出现的warning
+    publicPath: './',
+    //Django要求的静态资源文件夹
+    assetsDir: 'static',
     devServer: {
         proxy: {
             '/api': {
