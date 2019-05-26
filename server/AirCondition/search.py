@@ -44,6 +44,10 @@ class room:
 
     def checkRoomState(self,request):
         response = {}
+        if request.POST:
+            roomid = request.POST['roomid']
+            self.__init__(roomid)
+            response = self
         return JsonResponse(response)
 
 def requestOn(self,request):
