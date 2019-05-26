@@ -1,6 +1,15 @@
 from django.http.response import JsonResponse
 from django.shortcuts import render_to_response
-from conditioner import conditioner
+
+class conditioner:
+    def __init__(self,Mode,Temp_highLimit,Temp_lowLimit,default_TargetTemp,FeeRate_H,FeeRate_M,FeeRate_L):
+        self.Mode = Mode
+        self.Temp_highLimit = 30
+        self.Temp_lowLimit = 10
+        self.default_TargetTemp = 20
+        self.FeeRate_H = 0.75
+        self.FeeRate_M = 0.5
+        self.FeeRate_L = 0.25
 
 def requestOn(self,request):
     response = {}
@@ -38,8 +47,9 @@ def printInvoice(self,request):
     response = {}
     return JsonResponse(response)
 
-def powerOn (self, request):
+def powerOn ():
     response = {}
+    response['state'] = 'ok'
     return JsonResponse(response)
 
 def setPara(self,request):
