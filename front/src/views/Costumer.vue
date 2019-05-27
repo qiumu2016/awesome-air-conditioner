@@ -19,7 +19,46 @@
       </el-row>
     </el-header>
     <el-main>
-     
+     <el-row>
+      <el-col :span="12"><el-row><span  style="font-size:40px  ">显示</span></el-row>
+        <el-col :span="12">
+          <div class = "current"><el-row><span  style="font-size:20px">实时信息</span></el-row>
+            <el-row><span class = "text">是否入住：{{isCheckIn}}</span></el-row>
+            <el-row><span class = "text">是否开机：{{isOpen}}</span></el-row>
+            <el-row><span class = "text">是否服务{{isServing}}：</span></el-row>
+            <el-row><span class = "text">当前风速：{{cur_wind}}</span></el-row>
+            <el-row><span class = "text">当前温度：{{cur_temp}}℃</span></el-row>
+            <el-row><span class = "text">当前费率：{{fee_rate}}</span></el-row>
+            <el-row><span class = "text">当前费用：{{fee}}</span></el-row>
+          </div>
+        </el-col>
+        <el-col :span="12">
+          <div class = "setting"><el-row><span  style="font-size:20px">设定信息</span></el-row>
+            <el-row><span class = "text">是否开机：{{ispower}}</span></el-row>
+            <el-row><span class = "text">当前模式：{{model}}</span></el-row>
+            <el-row><span class = "text">设定温度：{{set_temp}}℃</span></el-row>
+            <el-row><span class = "text">设定风速：{{set_wind}}</span></el-row>
+          </div>
+        </el-col>
+      </el-col>
+      <el-col :span="12"><el-row><span  style="font-size:40px">遥控</span></el-row>
+                         <div class="controler"> 
+                          <el-row :gutter="40">
+                            <el-button type="success" style = "width:120px" @click="request_on()">开机</el-button>
+                            <el-button type="danger" style = "width:120px" @click="request_off()">关机</el-button>
+                          </el-row>
+                          <el-row :gutter="40">
+                            <el-button type="primary" style = "width:120px" @click="temp_inc()">温度 +</el-button>
+                            <el-button type="primary" style = "width:120px" @click="temp_dec()">温度 -</el-button>
+                          </el-row>
+                          <el-row :gutter="40">
+                             <el-button type="warning" style = "width:75px" @click="wind_change(0)">弱风</el-button>
+                             <el-button type="warning" style = "width:75px" @click="wind_change(1)">中风</el-button>
+                             <el-button type="warning" style = "width:75px" @click="wind_change(2)">强风</el-button>
+                          </el-row>
+                         </div>
+      </el-col>
+    </el-row>
     </el-main>
    
   </el-container>
@@ -29,6 +68,7 @@
 <script>
 import Myfooter from '@/components/myfooter.vue'
 import userHeader from '@/components/userheader.vue'
+var InitSetInterval
   export default {
     name:'Costumer',
     components: { 
@@ -36,75 +76,211 @@ import userHeader from '@/components/userheader.vue'
      Myfooter,
     },
     data() {
-      var checkusername = (rule, value, callback) => {
-        if (!value) {
-          return callback(new Error('账号不能为空'));
-        } else {
-          callback();
-        }
-      };
-      var checkpass = (rule, value, callback) => {
-       if (value === '') {
-         callback(new Error('请输入密码'));
-       } else {
-         callback();
-       }
-     };
       return {
-       rules: {
-         username: [
-           { validator: checkusername, trigger: 'blur' }
-         ],
-         password: [
-           { validator: checkpass, trigger: 'blur' }
-         ]
-       }
+       roomId:'310e',
+       set_temp:24,
+       model:'制冷',
+       cur_temp:'',
+       set_wind:'弱风',
+       wind:'low',
+       cur_wind:'',
+       ispower:'未开机',
+       isCheckIn:'未入住',
+       isOpen:'未开机',
+       isServing:'未在服务',
+       wind:['弱风','中风','强风'],
+       winden:['low','mid','high'],
+       fee_rate:'',
+       fee:'',
+       maxt:'',
+       mint:'',
+       checkin:['未入住','已入住'],
+       open:['未开机','已开机'],
+       serve:['正在服务','未在服务']
       }
     },
-    
+    created(){
+      InitSetInterval = setInterval(this.request_info(),1000)
+    },
     mounted(){
         
     },
+    destroyed() {
+      clearInterval(InitSetInterval)
+    },
     methods:{
-      submitForm(formName) {
-        this.$refs[formName].validate((valid) => {
-          if (valid) {
-            let sent = {
-              email : this.logForm.username,
-              passwd :this.logForm.password,
-              status:this.logForm.status
+      request_info(){
+        let sent = {
+              room_id :'310',
             }
-            this.$ajax({
+          this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: '/api/session',
+              url: '/api/customer/request_info',
               data : sent
             })
             .then((response) => {    
-              //console.log(response)
               if(response.status == 200){
-                if(response.data.result.accountType=='用户'){
-                  sessionStorage.setItem("userType",this.logForm.status)
-                  sessionStorage.setItem("userName",this.logForm.username)
-                  //console.log( this.$store.getters.get_userlevel)
-
-                }else {
-                  //alert("请使用普通用户账号登录！
-                } 
+                this.isCheckIn = this.checkin[response.data.isCheckIn]
+                this.isOpen = this.open[response.data.isOpen]
+                this.isServing = this.serve[response.data.isServing]
+                this.cur_wind = response.data.wind = 'high'?'强风':response.data.wind = 'mid'?'中风':'弱风'
+                this.cur_temp = response.data.current_temp
+                this.fee_rate = response.data.fee_rate
+                this.fee = response.data.fee
               }
             })
             .catch((error) => {
-               //console.log(error.response)
                this.$message.error(error.response.data.message);
-              //  alert(error.response.data.message)
             })
-          } else {
-            //console.log('error submit!!');//表单错误
-            this.$message.error('请检查输入是否正确！');
-            return false;
+      },
+      request_on(){
+        if(this.ispower == '未开机'){
+           let sent = {
+              room_id :'310',
+              current_room_temp :this.cur_temp
+            }
+          this.$ajax({
+              type: 'HEAD',
+              method: 'post',
+              url: '/api/customer/request_on',
+              data : sent
+            })
+            .then((response) => {    
+              if(response.status == 200){
+                this.model = response.data.model = 'cold'?'制冷':'制暖'
+                this.set_temp = response.data.target_temp
+                this.maxt = response.data.temp_high_limit
+                this.mint = response.data.temp_low_limit
+                this.ispower = '已开机'
+              }
+            })
+            .catch((error) => {
+               this.$message.error(error.response.data.message);
+            })
+          
+        }
+      },
+      request_off(){
+        if(this.ispower == '已开机'){
+           let sent = {
+              room_id :'310',
+              current_room_temp :this.cur_temp
+            }
+          this.$ajax({
+              type: 'HEAD',
+              method: 'post',
+              url: '/api/customer/request_off',
+              data : sent
+            })
+            .then((response) => {    
+              if(response.status == 200){
+                this.ispower = '未开机'
+              }
+            })
+            .catch((error) => {
+               this.$message.error(error.response.data.message);
+            })
+        }
+      },
+      temp_inc(){
+        if(this.ispower == '已开机'){
+         if(this.set_temp+1 > this.maxt){
+            this.$message({
+            message: '超出可设定温度上限！',
+            type: 'warning'
+          });
+         }else {
+           let sent = {
+              room_id :'310',
+              target_temp :this.set_temp+1
+            }
+          this.$ajax({
+              type: 'HEAD',
+              method: 'post',
+              url: '/api/customer/change_target_temp',
+              data : sent
+            })
+            .then((response) => {    
+              if(response.status == 200){
+                this.set_temp++;
+              }
+            })
+            .catch((error) => {
+               this.$message.error(error.response.data.message);
+            })
           }
-        });
-      }
+        }else{
+          this.$message({
+            message: '未开机！',
+            type: 'warning'
+          });
+        }
+        
+      },
+      temp_dec(){
+        if(this.ispower == '已开机'){
+         if(this.set_temp-1 < this.maxt){
+            this.$message({
+            message: '超出可设定温度下限！',
+            type: 'warning'
+          });
+         }else {
+           let sent = {
+              room_id :'310',
+              target_temp :this.set_temp-1
+            }
+          this.$ajax({
+              type: 'HEAD',
+              method: 'post',
+              url: '/api/customer/change_target_temp',
+              data : sent
+            })
+            .then((response) => {    
+              if(response.status == 200){
+                this.set_temp--;
+              }
+            })
+            .catch((error) => {
+               this.$message.error(error.response.data.message);
+            })
+          }
+        }else{
+          this.$message({
+            message: '未开机！',
+            type: 'warning'
+          });
+        }
+      },
+      wind_change(wind){
+        if(this.ispower == '已开机'){
+          if(this.set_wind !=this.wind[wind]){
+             let sent = {
+              room_id :'310',
+              fan_speed :this.winden[wind]
+            }
+          this.$ajax({
+              type: 'HEAD',
+              method: 'post',
+              url: '/api/customer/change_fan_speed',
+              data : sent
+            })
+            .then((response) => {    
+              if(response.status == 200){
+                this.set_wind = this.wind[wind]
+              }
+            })
+            .catch((error) => {
+               this.$message.error(error.response.data.message);
+            })
+          }
+        }else{
+          this.$message({
+            message: '未开机！',
+            type: 'warning'
+          });
+        }
+      },
     }
     
  };
@@ -112,7 +288,51 @@ import userHeader from '@/components/userheader.vue'
 </script>
 
 <style scoped>
-
+  .text{
+    font-size:15px;
+    position: relative;
+    float: left;
+    left:20%
+  }
+  .el-row {
+    margin-bottom: 20px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  .current{
+    border-radius: 15px;
+    line-height: 16px;
+    position: relative;
+    left: 12%;
+    float: right;
+    width: 300px;
+    padding: 15px;
+    text-align:center;
+    background:rgba(255, 255, 255, 0.7);
+  }
+  .setting{
+    left: 12%;
+    float: right;
+    border-radius: 15px;
+    line-height: 16px;
+    position: relative;
+    width: 300px;
+    padding: 15px;
+    text-align:center;
+    background:rgba(255, 255, 255, 0.7);
+  }
+  .controler{
+    border-radius: 15px;
+    line-height: 16px;
+    position: relative;
+    width: 400px;
+    right:22%;
+    float: right;
+    padding: 15px;
+    text-align:center;
+    background:rgba(255, 255, 255, 0.7);
+  }
   .body {
     min-height: 100%;
     margin: 0;
