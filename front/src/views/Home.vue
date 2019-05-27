@@ -25,7 +25,13 @@
               </div>
             </el-carousel-item>
           </el-carousel>
-          <el-button class = "btn" @click = "to_login()"> 登录</el-button>
+          <el-row :gutter="20">
+            <el-col :span="6"><el-button class = "btn"  type="primary" @click = "to_costumer()"> 客房</el-button></el-col>
+            <el-col :span="6"><el-button class = "btn"  type="success" @click = "to_desk()"> 前台</el-button></el-col>
+            <el-col :span="6"><el-button class = "btn"  type="warning" @click = "to_manager()"> 经理</el-button></el-col>
+            <el-col :span="6"><el-button class = "btn"  type="danger" @click = "to_administrator()"> 管理员</el-button></el-col>
+          </el-row>
+          
       </el-main>
      
   </el-container>
@@ -51,11 +57,8 @@
     position: fixed;
   }
 .btn{
-    position: relative;
-    float: left;
-    width: 20%;
+    width: 50%;
     height: 8%;
-    left: 38%;
     cursor: pointer;
     font-size: 20px;
 }
@@ -84,10 +87,18 @@
       //console.log(this.$store.getters.isLogin)
     },
     methods:{
-      to_login(){
-        console.log(123)
-				this.$router.push('/login');
-			},
+      to_costumer(){
+				this.$router.push('/costumer');
+      },
+      to_desk(){
+        this.$router.push('/desk');
+      },
+      to_manager(){
+        this.$router.push('/manager');
+      },
+      to_administrator(){
+         this.$router.push('/administrator');
+      },
     }
  };
 </script>

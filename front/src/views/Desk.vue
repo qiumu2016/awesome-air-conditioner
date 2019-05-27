@@ -19,26 +19,7 @@
       </el-row>
     </el-header>
     <el-main>
-      <div class = "logf">
-        <span>登录</span>
-        <el-form :model="logForm"  ref="logForm" class="demo-ruleForm">
-          <el-form-item label="邮箱：" prop="username" :rules="[{ required: true, message: '账号不能为空'},]">
-            <el-input type="text" v-model="logForm.username" autocomplete="off" placeholder="请输入账号"></el-input>
-          </el-form-item>
-          <el-form-item label="密码：" prop="password" :rules="[{ required: true, message: '密码不能为空'}]">
-            <el-input type="password"  v-model="logForm.password" autocomplete="off" placeholder="请输入密码"></el-input>
-          </el-form-item>
-            <el-radio-group v-model="logForm.status">
-                <el-radio :label="1">客房</el-radio>
-                <el-radio :label="2">经理</el-radio>
-                <el-radio :label="3">前台</el-radio>
-                <el-radio :label="4">管理员</el-radio>
-            </el-radio-group>
-        </el-form>
-        <div style="padding:10px">
-            <el-button  @click="submitForm('logForm')" weight='50px' style="background-color:orange;color:white;width:100px">登录</el-button>
-        </div>
-      </div>
+     
     </el-main>
    
   </el-container>
@@ -49,7 +30,7 @@
 import Myfooter from '@/components/myfooter.vue'
 import userHeader from '@/components/userheader.vue'
   export default {
-    name:'login',
+    name:'Desk',
     components: { 
      userHeader,
      Myfooter,
@@ -70,12 +51,7 @@ import userHeader from '@/components/userheader.vue'
        }
      };
       return {
-        publickey:'',
-        logForm: {
-         username: '',
-         password: '',
-         status:''
-       },
+      
        rules: {
          username: [
            { validator: checkusername, trigger: 'blur' }
@@ -111,14 +87,7 @@ import userHeader from '@/components/userheader.vue'
             .then((response) => {    
               //console.log(response)
               if(response.status == 200){
-                if(response.data.result.accountType=='用户'){
-                  sessionStorage.setItem("userType",this.logForm.status)
-                  sessionStorage.setItem("userName",this.logForm.username)
-                  //console.log( this.$store.getters.get_userlevel)
-
-                }else {
-                  //alert("请使用普通用户账号登录！
-                } 
+          
               }
             })
             .catch((error) => {
@@ -140,19 +109,7 @@ import userHeader from '@/components/userheader.vue'
 </script>
 
 <style scoped>
-  .logf{
-    border-radius: 15px;
-    line-height: 16px;
-    position: relative;
-    width: 400px;
-    height: 260px;
-    top :50px;
-    right:38%;
-    float: right;
-    padding: 15px;
-    text-align:center;
-    background:rgba(255,255,255,0.9);
-  }
+
   .body {
     min-height: 100%;
     margin: 0;
