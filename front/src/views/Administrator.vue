@@ -11,7 +11,7 @@
         >
           <el-col :span="9" :offset="1"><pre></pre></el-col>
 
-          <el-menu-item index="0" >
+          <el-menu-item index="0"  @click="to_home">
             <span class="iconfont">&#xe61e;</span>
           ACC空调管理系统
           </el-menu-item>
@@ -43,7 +43,9 @@ import userHeader from '@/components/userheader.vue'
         
     },
     methods:{
-      
+      to_home(){
+        this.$router.push('/');
+      },
     }
     
  };

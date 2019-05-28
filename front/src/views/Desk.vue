@@ -19,7 +19,36 @@
       </el-row>
     </el-header>
     <el-main>
-     
+     <el-row>
+      <el-col :span="12">
+        <el-row><span  style="font-size:40px  ">打印详单</span></el-row>
+        <div class = "rdrf">
+          <el-form :model="rdrForm"  label-width="90px" ref="rdrForm" class="demo-ruleForm">
+            <el-form-item label="房间号：" prop="roomId" :rules="[{ required: true, message: '房间号不能为空'},
+            { type: 'number', message: '请输入数字', trigger: ['blur', 'change'] }]">
+              <el-input type="text" v-model.number="rdrForm.roomId" width="100px"  autocomplete="off" placeholder="请输入房间号"></el-input>
+            </el-form-item>
+          </el-form>
+          <div style="padding:10px">
+              <el-button  @click="printf_rdr('rdrForm')" weight='50px' style="background-color:orange;color:white;width:100px">打印详单</el-button>
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="12">
+        <el-row><span  style="font-size:40px  ">打印账单</span></el-row>
+        <div class = "rdrf">
+          <el-form :model="invForm" label-width="90px" ref="invForm" class="demo-ruleForm">
+            <el-form-item label="房间号：" prop="roomId" :rules="[{ required: true, message: '房间号不能为空'},
+            { type: 'number', message: '请输入数字', trigger: ['blur', 'change'] }]">
+              <el-input type="text" v-model.number="invForm.roomId" width="100px"  autocomplete="off" placeholder="请输入房间号"></el-input>
+            </el-form-item>
+          </el-form>
+          <div style="padding:10px">
+              <el-button  @click="printf_inv('invForm')" weight='50px' style="background-color:orange;color:white;width:100px">打印账单</el-button>
+          </div>
+        </div>
+      </el-col>
+     </el-row>
     </el-main>
    
   </el-container>
@@ -36,30 +65,13 @@ import userHeader from '@/components/userheader.vue'
      Myfooter,
     },
     data() {
-      var checkusername = (rule, value, callback) => {
-        if (!value) {
-          return callback(new Error('账号不能为空'));
-        } else {
-          callback();
-        }
-      };
-      var checkpass = (rule, value, callback) => {
-       if (value === '') {
-         callback(new Error('请输入密码'));
-       } else {
-         callback();
-       }
-     };
       return {
-      
-       rules: {
-         username: [
-           { validator: checkusername, trigger: 'blur' }
-         ],
-         password: [
-           { validator: checkpass, trigger: 'blur' }
-         ]
-       }
+       rdrForm: {
+         roomId: '',
+       },
+       invForm: {
+         roomId: '',
+       },
       }
     },
     
@@ -68,35 +80,56 @@ import userHeader from '@/components/userheader.vue'
     },
     methods:{
       to_home(){
-        this.$router.push('/')
+        this.$router.push('/');
       },
-      submitForm(formName) {
+      printf_rdr(formName){
         this.$refs[formName].validate((valid) => {
           if (valid) {
             let sent = {
-              email : this.logForm.username,
-              passwd :this.logForm.password,
-              status:this.logForm.status
+              room_id : this.rdrForm.roomId,
             }
             this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: '/api/session',
+              url: '/api/desk/print_rdr',
               data : sent
             })
             .then((response) => {    
-              //console.log(response)
               if(response.status == 200){
           
               }
             })
             .catch((error) => {
-               //console.log(error.response)
+              
                this.$message.error(error.response.data.message);
-              //  alert(error.response.data.message)
             })
           } else {
-            //console.log('error submit!!');//表单错误
+            this.$message.error('请检查输入是否正确！');
+            return false;
+          }
+        });
+      },
+      printf_inv(formName) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            let sent = {
+               room_id : this.invForm.roomId,
+            }
+            this.$ajax({
+              type: 'HEAD',
+              method: 'post',
+              url: '/api/desk/print_invoice',
+              data : sent
+            })
+            .then((response) => {    
+              if(response.status == 200){
+          
+              }
+            })
+            .catch((error) => {
+               this.$message.error(error.response.data.message);
+            })
+          } else {
             this.$message.error('请检查输入是否正确！');
             return false;
           }
@@ -109,7 +142,23 @@ import userHeader from '@/components/userheader.vue'
 </script>
 
 <style scoped>
-
+  .rdrf{
+    border-radius: 15px;
+    line-height: 16px;
+    position: relative;
+    left: 20%;
+    width: 400px;
+    height: 100px;
+    padding: 15px;
+    text-align:center;
+    background:rgba(255,255,255,0.9);
+  }
+  .el-row {
+    margin-bottom: 20px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
   .body {
     min-height: 100%;
     margin: 0;
