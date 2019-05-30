@@ -19,7 +19,23 @@
       </el-row>
     </el-header>
     <el-main>
-     
+     <el-row>
+        <el-col :span="8">
+        </el-col>
+        <el-col :span="8">
+          <div class = "f">
+             <el-radio v-model="radio" label="0">日报表</el-radio>
+             <el-radio v-model="radio" label="1">周报表</el-radio>
+             <el-radio v-model="radio" label="2">月报表</el-radio>
+             <el-radio v-model="radio" label="3">年报表</el-radio>
+            <div style="padding:10px">
+              <el-button  @click="printf_report()" weight='50px' style="background-color:orange;color:white;width:100px">打印报表</el-button>
+            </div>
+          </div>
+        </el-col>
+        <el-col :span="8">
+        </el-col>
+     </el-row>
     </el-main>
    
   </el-container>
@@ -36,7 +52,9 @@ import userHeader from '@/components/userheader.vue'
      Myfooter,
     },
     data() {
-     
+      return{
+         radio: '0'
+      }
     },
     
     mounted(){
@@ -46,7 +64,26 @@ import userHeader from '@/components/userheader.vue'
       to_home(){
         this.$router.push('/');
       },
-    
+      printf_report(){
+        let sent = {
+              type : this.radio,
+            }
+          this.$ajax({
+              type: 'HEAD',
+              method: 'post',
+              url: '/api/manager/print_report',
+              data : sent
+            })
+            .then((response) => {    
+              if(response.status == 200){
+          
+              }
+            })
+            .catch((error) => {
+              
+               this.$message.error(error.response.data.message);
+            })
+        }
     }
     
  };
@@ -54,7 +91,18 @@ import userHeader from '@/components/userheader.vue'
 </script>
 
 <style scoped>
-
+  .f{
+    border-radius: 15px;
+    line-height: 16px;
+    position: relative;
+    top:100px;
+    left: 100%;
+    width: 400px;
+    height: 60px;
+    padding: 15px;
+    text-align:center;
+    background:rgba(255,255,255,0.9);
+  }
   .body {
     min-height: 100%;
     margin: 0;
