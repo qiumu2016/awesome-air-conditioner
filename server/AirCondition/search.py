@@ -120,7 +120,7 @@ def checkRoomState(request): #查看房间状态
         response['current_temp'] = roomlist[roomid].currentTemp
         if roomlist[roomid].isOpen == 1:
             response['isServing'] = roomlist[roomid].isServing
-            obj = dispatch(roomid,'low',27,0.25,'cold')
+            obj = 0
             if servicelist.__contains__(roomlist[roomid].dispatchid) :
                 obj = servicelist[roomlist[roomid].dispatchid]
             else:
@@ -212,12 +212,11 @@ def requestOn(request): #顾客请求开机
                 obj2.waittime = 2
                 roomlist[target.roomid].isServing = 0
                 servicelist[obj.id] = obj
-                serviceobject = serviceobj(roomid)
+                serviceobject = serviceobj(roomid) #新建一个服务对象
                 obj.serviceid = serviceobject.id
                 serviceobject.dispatchid = obj.id
                 roomlist[roomid].isServing = 1
                 serviceobject.status = 1
-                obj.clock = time.time()
                 serviceobjlist[serviceobject.id] = serviceobject
             elif cmpwind('low' , target.wind) == 1: #进入等待队列
                 waitlist[obj.id] = obj
