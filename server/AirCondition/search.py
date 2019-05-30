@@ -238,7 +238,7 @@ def requestOn(request): #顾客请求开机
 def requestOff(request): #顾客关机
     response = {}
     if request.POST:
-        roomid = request.POST['roomid']
+        roomid = request.POST['room_id']
         roomlist[roomid].currentTemp = request.POST['current_room_temp']
         dispatchid = roomlist[roomid].dispatchid
         roomlist[roomid].dispatchid = 0
@@ -259,6 +259,26 @@ def requestOff(request): #顾客关机
 
 def requestInfo(request): #每分钟查看一次费用
     response = {}
+    if request.POST:
+        roomid = request.POST['room_id']
+        if roomlist.__contains__(roomid) :
+            response['isCheckIn'] = roomlist[roomid].isCheckIn
+            response['isOpen'] = roomlist[roomid].isOpen
+            response['isServing'] = roomlist[roomid].isServing
+            obj = 0
+            if servicelist.__contains__(roomlist[roomid].dispatchid) :
+                obj = servicelist[roomlist[roomid].dispatchid]
+            else:
+                obj = waitlist[roomlist[roomid].dispatchid]
+            response['wind'] = obj.wind
+            response['current_temp'] = roomlist[roomid].currentTemp
+            response['fee_rate'] = obj.fee_rate
+            response['fee'] = obj.fee
+            response['state'] = 'ok'
+        else:
+            response['state'] = 'fail'
+    else:
+        response['state'] = 'fail'
     return JsonResponse(response)
 
 def printReport(request): #打印报表
