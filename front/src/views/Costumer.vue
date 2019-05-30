@@ -25,7 +25,7 @@
           <div class = "current"><el-row><span  style="font-size:20px">实时信息</span></el-row>
             <el-row><span class = "text">是否入住：{{isCheckIn}}</span></el-row>
             <el-row><span class = "text">是否开机：{{isOpen}}</span></el-row>
-            <el-row><span class = "text">是否服务{{isServing}}：</span></el-row>
+            <el-row><span class = "text">是否服务：{{isServing}}</span></el-row>
             <el-row><span class = "text">当前风速：{{cur_wind}}</span></el-row>
             <el-row><span class = "text">当前温度：{{cur_temp}}℃</span></el-row>
             <el-row><span class = "text">当前费率：{{fee_rate}}</span></el-row>
@@ -36,6 +36,7 @@
           <div class = "setting"><el-row><span  style="font-size:20px">设定信息</span></el-row>
             <el-row><span class = "text">是否开机：{{ispower}}</span></el-row>
             <el-row><span class = "text">当前模式：{{model}}</span></el-row>
+            <el-row><span class = "text">室外温度：{{outdoor}}℃</span></el-row>
             <el-row><span class = "text">设定温度：{{set_temp}}℃</span></el-row>
             <el-row><span class = "text">设定风速：{{set_wind}}</span></el-row>
           </div>
@@ -59,6 +60,18 @@
                          </div>
       </el-col>
     </el-row>
+    <el-row>
+       <el-col :span="8">
+       </el-col>
+       <el-col :span="8">
+         <div class="image"> 
+           <img v-show="ispower == '已开机'" :src = "img1.src" height="180" width="550">
+           <img v-show="ispower == '未开机'" :src = "img2.src" height="180" width="550">
+         </div>
+       </el-col>
+       <el-col :span="8">
+       </el-col>
+    </el-row>
     </el-main>
    
   </el-container>
@@ -69,6 +82,7 @@
 import Myfooter from '@/components/myfooter.vue'
 import userHeader from '@/components/userheader.vue'
 var InitSetInterval
+var changeT
   export default {
     name:'Costumer',
     components: { 
@@ -77,6 +91,8 @@ var InitSetInterval
     },
     data() {
       return {
+       img1:{id:1, src:require('../images/power.gif')},
+       img2:{id:2, src:require('../images/power1.jpeg')},
        roomId:'310e',
        set_temp:24,
        model:'制冷',
@@ -96,11 +112,13 @@ var InitSetInterval
        mint:'',
        checkin:['未入住','已入住'],
        open:['未开机','已开机'],
-       serve:['正在服务','未在服务']
+       serve:['正在服务','未在服务'],
+       outdoor:30,
       }
     },
     created(){
       InitSetInterval = setInterval(this.request_info(),1000)
+      this.init();
     },
     mounted(){
         
@@ -109,6 +127,27 @@ var InitSetInterval
       clearInterval(InitSetInterval)
     },
     methods:{
+      init(){
+        this.cur_temp = this.outdoor
+      },
+      changtemp(){
+        if(this.ispower =='未开机'){
+           if(this.model == '制冷' &&this.cur_temp < this.outdoor){
+              this.cur_temp = this.cur_temp + 0.5
+            }else if(this.model == '制暖' && this.cur_temp > this.outdoor){
+              this.cur_temp = this.cur_temp - 0.5
+            }
+            if(this.model == '制冷' && this.cur_temp > (this.set_temp+1)){
+              window.clearInterval(changeT); 
+              this.request_on()
+            }
+            if(this.model == '制暖' && this.cur_temp < (this.set_temp-1)){
+              window.clearInterval(changeT); 
+              this.request_on()
+            }
+        }
+       
+      },
       request_info(){
         let sent = {
               room_id :'310',
@@ -123,11 +162,15 @@ var InitSetInterval
               if(response.status == 200){
                 this.isCheckIn = this.checkin[response.data.isCheckIn]
                 this.isOpen = this.open[response.data.isOpen]
+                this.ispower = this.open[response.data.isOpen]
                 this.isServing = this.serve[response.data.isServing]
                 this.cur_wind = response.data.wind = 'high'?'强风':response.data.wind = 'mid'?'中风':'弱风'
                 this.cur_temp = response.data.current_temp
                 this.fee_rate = response.data.fee_rate
                 this.fee = response.data.fee
+                if(this.ispower == '未开机'){
+                  changeT = window.setInterval(this.changtemp(),1000); 
+                }
               }
             })
             .catch((error) => {
@@ -135,7 +178,12 @@ var InitSetInterval
             })
       },
       request_on(){
-        if(this.ispower == '未开机'){
+        if(this.ispower == '已开机'){
+          this.$message({
+            message: '已开机！',
+            type: 'warning'
+          });
+        } else if(this.ispower == '未开机'){
            let sent = {
               room_id :'310',
               current_room_temp :this.cur_temp
@@ -153,6 +201,7 @@ var InitSetInterval
                 this.maxt = response.data.temp_high_limit
                 this.mint = response.data.temp_low_limit
                 this.ispower = '已开机'
+                this.isOpen = '已开机'
               }
             })
             .catch((error) => {
@@ -160,9 +209,15 @@ var InitSetInterval
             })
           
         }
+        
       },
       request_off(){
-        if(this.ispower == '已开机'){
+        if(this.ispower == '未开机'){
+          this.$message({
+            message: '未开机！',
+            type: 'warning'
+          });
+        } else if(this.ispower == '已开机'){
            let sent = {
               room_id :'310',
               current_room_temp :this.cur_temp
@@ -176,6 +231,8 @@ var InitSetInterval
             .then((response) => {    
               if(response.status == 200){
                 this.ispower = '未开机'
+                this.isOpen = '未开机'
+                changeT = window.setInterval(this.changtemp(),1000); 
               }
             })
             .catch((error) => {
@@ -318,6 +375,17 @@ var InitSetInterval
     line-height: 16px;
     position: relative;
     width: 300px;
+    padding: 15px;
+    text-align:center;
+    background:rgba(255, 255, 255, 0.7);
+  }
+  .image{
+    border-radius: 15px;
+    line-height: 16px;
+    position: relative;
+    left: 90%;
+    width: 600px;
+    height: 180px;
     padding: 15px;
     text-align:center;
     background:rgba(255, 255, 255, 0.7);
