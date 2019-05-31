@@ -1,8 +1,6 @@
 from django.db import models
 
 
-from django.db import models
-
 #房客每一操作对应的参数
 class Details(models.Model):
     id = models.AutoField(primary_key=True)

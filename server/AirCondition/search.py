@@ -1,6 +1,11 @@
 from django.http.response import JsonResponse
 from django.shortcuts import render_to_response
 import time
+import datetime
+import sqlite3
+import os
+
+dbpath = 'db [2]'
 
 def cmpwind(s1,s2): # 0是小于，1是等于，2是大于
     if s1 == s2 :
@@ -71,10 +76,52 @@ class room:
 
     def printRDR(self,request): #打印详单
         response = {}
+        if request.POST:
+            roomid = request.POST['room_id']
+            dateIn = request.POST['date_in']
+            dateOut = request.POST['date_out']
+
+            conn = sqlite3.connect(dbpath)
+            cursor = conn.cursor()
+            queryDetailSql = '''select room_id, start_time, (end_time - start_time), wind, fee_rate, fee
+                                from AirCondition_details
+                                where room_id = ? and start_time >= ? and end_time <= ?
+            '''
+            cursor.execute(queryDetailSql, (roomid, dateIn, dateOut))
+            values = cursor.fetchall()
+
+            mode = 'RDR_{}'
+            with open(mode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
+                f.write(values)
+
+            response['state'] = 'ok'
+        else:
+            response['state'] = 'fail'
         return JsonResponse(response)
 
     def printInvoice(self,request): #打印账单
         response = {}
+        if request.POST:
+            roomid = request.POST['room_id']
+            dateIn = request.POST['date_in']
+            dateOut = request.POST['date_out']
+
+            conn = sqlite3.connect(dbpath)
+            cursor = conn.cursor()
+            queryDetailSql = '''select sum(fee)
+                                from AirCondition_details
+                                where room_id = ? and start_time >= ? and end_time <= ?
+            '''
+            cursor.execute(queryDetailSql, (roomid, dateIn, dateOut))
+            values = cursor.fetchone()
+
+            mode = 'Invoice_{}'
+            with open(mode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
+                f.write(roomid, values)
+
+            response['state'] = 'ok'
+        else:
+            response['state'] = 'fail'
         return JsonResponse(response)
 
 roomlist = {}
@@ -147,12 +194,24 @@ def changeTargetTemp(request): #顾客更改空调目标温度
             response['state'] = 'ok'
         else:
             response['state'] = 'fail'
+
+        connR = sqlite3.connect(dbpath)
+        cursorR = connR.cursor()
+        updateReportSql = '''update AirCondition_report
+                             set schedule = schedule + 1, change_temp = change_temp + 1
+                             where room_id = ?
+        '''
+        cursorR.execute(updateReportSql, roomid)
+        cursorR.close()
+        connR.commit()
+        connR.close()
     else:
         response['state'] = 'fail'
     return JsonResponse(response)
 
 def changeFanSpeed(request): #顾客更改空调风速
     response = {}
+    t2 = datetime.datetime.now()
     if request.POST:
         roomid = request.POST['room_id']
         fan = request.POST['fan_speed']
@@ -163,6 +222,53 @@ def changeFanSpeed(request): #顾客更改空调风速
             else:
                 waitlist[roomlist[roomid].dispatchid].wind = fan
                 waitlist[roomlist[roomid].dispatchid].fee_rate = feecalc(fan)
+
+            conn = sqlite3.connect(dbpath)
+            cursor = conn.cursor()
+            queryDetailSql1 = '''select MAX(id)
+                                 from AirCondition_details
+                                 where room_id = ?
+            '''
+            cursor.execute(queryDetailSql1, roomid)
+            updateId = cursor.fetchone()
+            queryDetailSql2 = '''select check_in_time
+                                 from AirCondition_details
+                                 where room_id = ?
+            '''
+            cursor.execute(queryDetailSql2, roomid)
+            t1 = cursor.fetchone()
+            temp1 = roomlist[roomid].currentTemp
+
+            updateDetailSql = '''update AirCondition_details
+                                 set end_time = ?, end_temp = ?,fee = 1
+                                 where id = ?
+            '''
+            cursor.execute(updateDetailSql, (t2, temp1, updateId))
+
+
+            addDetailSql = '''insert into AirCondition_details
+                              (check_in_time, room_id, model, operation, start_time, start_temp, wind, fee_rate)
+                              values 
+                              (?, ?, ?, ?, ?, ?, ?, ?)
+            '''
+
+            cursor.execute(addDetailSql, (t1, roomid, 'cold', 'fan', t2, temp1, fan, feecalc(fan)))
+            cursor.close()
+            conn.commit()
+            conn.close()
+
+
+            connR = sqlite3.connect(dbpath)
+            cursorR = connR.cursor()
+            updateReportSql = '''update AirCondition_report
+                                 set schedule = schedule + 1, change_wind = change_wind + 1
+                                 where room_id = ?
+            '''
+            cursorR.execute(updateReportSql, roomid)
+            cursorR.close()
+            connR.commit()
+            connR.close()
+
             response['state'] = 'ok'
         else:
             response['state'] = 'fail'
@@ -172,6 +278,7 @@ def changeFanSpeed(request): #顾客更改空调风速
 
 def requestOn(request): #顾客请求开机
     response = {}
+    t1 = datetime.datetime.now()
     if request.POST:
         roomid = request.POST['room_id']
         obj = dispatch(roomid,'low',27,0.25,'cold') #调度
@@ -233,10 +340,49 @@ def requestOn(request): #顾客请求开机
         response['state'] = 'ok'
     else:
         response['state'] = 'fail'
+
+    conn = sqlite3.connect(dbpath)
+    cursor = conn.cursor()
+    addDetailSql = '''insert into AirCondition_details
+                      (check_in_time, room_id, model, operation, start_time, start_temp, wind, fee_rate)
+                      values
+                      (?, ?, 'cold', 'start', ?, 27, 'low', 0.25)
+    '''
+    cursor.execute(addDetailSql, (t1, roomid, t1))
+    cursor.close()
+    conn.commit()
+    conn.close()
+
+    connR = sqlite3.connect(dbpath)
+    cursorR = connR.cursor()
+    queryReportSql = '''select id
+                        from AirCondition_report
+                        where room_id = ?
+    '''
+    cursorR.execute(queryReportSql, roomid)
+    idR = cursorR.fetchone()
+    if (idR == None):
+        addReportSql = '''insert into AirCondition_report
+                          (room_id, switch, time, fee, schedule, change_temp, change_wind) 
+                          values 
+                          (?, 1, 0, 0, 1, 0, 0)
+        '''
+        cursorR.execute(addReportSql, roomid)
+    else:
+        updateReportSql = '''update AirCondition_report
+                             set switch = switch + 1
+                             where id = ?
+        '''
+        cursorR.execute(updateReportSql, idR)
+    cursorR.close()
+    connR.commit()
+    connR.close()
+
     return JsonResponse(response)
 
 def requestOff(request): #顾客关机
     response = {}
+    t2 = datetime.datetime.now()
     if request.POST:
         roomid = request.POST['room_id']
         roomlist[roomid].currentTemp = request.POST['current_room_temp']
@@ -253,6 +399,33 @@ def requestOff(request): #顾客关机
             roomlist[roomid].isServing = 0
             del serviceobjlist[serviceid]
         response['state'] = 'ok'
+
+        conn = sqlite3.connect(dbpath)
+        cursor = conn.cursor()
+        queryDetailSql1 = '''select MAX(id)
+                             from AirCondition_details
+                             where room_id = ?
+        '''
+        cursor.execute(queryDetailSql1, roomid)
+        updateId = cursor.fetchone()
+        queryDetailSql2 = '''select check_in_time
+                             from AirCondition_details
+                             where room_id = ?
+        '''
+        cursor.execute(queryDetailSql2, roomid)
+        t1 = cursor.fetchone()
+        fee1 = (t2 - t1) * feecalc(roomlist[roomid].wind)
+        temp1 = roomlist[roomid].currentTemp
+
+        updateDetailSql = '''update AirCondition_details
+                             set end_time = ?, end_temp = ?,fee = 1
+                             where id = ?
+        '''
+        cursor.execute(updateDetailSql, (t2, temp1, updateId))
+        cursor.close()
+        conn.commit()
+        conn.close()
+
     else:
         response['state'] = 'fail'
     return JsonResponse(response)
@@ -283,4 +456,22 @@ def requestInfo(request): #每分钟查看一次费用
 
 def printReport(request): #打印报表
     response = {}
+    if request.POST:
+        roomid = request.POST['room_id']
+        connR = sqlite3.connect(dbpath)
+        cursorR = connR.cursor()
+        queryReportSql = '''select *
+                            from AirCondition_report
+                            where room_id = ?
+        '''
+        cursorR.execute(queryReportSql,roomid)
+        values = cursorR.fetchall()
+
+        mode = 'Report_{}'
+        with open(mode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
+            f.write(values)
+
+        response['state'] = 'ok'
+    else:
+        response['state'] = 'fail'
     return JsonResponse(response)
