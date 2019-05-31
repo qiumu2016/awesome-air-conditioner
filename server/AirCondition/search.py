@@ -3,7 +3,7 @@ from django.shortcuts import render_to_response
 import time
 import datetime
 import sqlite3
-import os
+import string
 
 dbpath = 'db [2]'
 
@@ -237,13 +237,18 @@ def changeFanSpeed(request): #顾客更改空调风速
             '''
             cursor.execute(queryDetailSql2, roomid)
             t1 = cursor.fetchone()
+            s1 = t1.strftime("%Y%m%d%H%M%S")
+            i1 = int(s1)
+            s2 = t2.strftime("%Y%m%d%H%M%S")
+            i2 = int(s2)
+            addFee = (i2 - i1) * feecalc(fan) / 60
             temp1 = roomlist[roomid].currentTemp
 
             updateDetailSql = '''update AirCondition_details
-                                 set end_time = ?, end_temp = ?,fee = 1
+                                 set end_time = ?, end_temp = ?,fee = ?
                                  where id = ?
             '''
-            cursor.execute(updateDetailSql, (t2, temp1, updateId))
+            cursor.execute(updateDetailSql, (t2, temp1, addFee, updateId))
 
 
             addDetailSql = '''insert into AirCondition_details
@@ -261,10 +266,10 @@ def changeFanSpeed(request): #顾客更改空调风速
             connR = sqlite3.connect(dbpath)
             cursorR = connR.cursor()
             updateReportSql = '''update AirCondition_report
-                                 set schedule = schedule + 1, change_wind = change_wind + 1
+                                 set time = time + ?, schedule = schedule + 1, change_wind = change_wind + 1
                                  where room_id = ?
             '''
-            cursorR.execute(updateReportSql, roomid)
+            cursorR.execute(updateReportSql, ((i2 - i1), roomid))
             cursorR.close()
             connR.commit()
             connR.close()
@@ -385,6 +390,11 @@ def requestOff(request): #顾客关机
     t2 = datetime.datetime.now()
     if request.POST:
         roomid = request.POST['room_id']
+
+        #
+        feerate = feecalc(roomlist[roomid].wind)
+        #
+
         roomlist[roomid].currentTemp = request.POST['current_room_temp']
         dispatchid = roomlist[roomid].dispatchid
         roomlist[roomid].dispatchid = 0
@@ -414,17 +424,33 @@ def requestOff(request): #顾客关机
         '''
         cursor.execute(queryDetailSql2, roomid)
         t1 = cursor.fetchone()
-        fee1 = (t2 - t1) * feecalc(roomlist[roomid].wind)
+        s1 = t1.strftime("%Y%m%d%H%M%S")
+        i1 = int(s1)
+        s2 = t2.strftime("%Y%m%d%H%M%S")
+        i2 = int(s2)
+        addFee = (i2 - i1) * feecalc(roomlist[roomid].wind)
         temp1 = roomlist[roomid].currentTemp
 
         updateDetailSql = '''update AirCondition_details
-                             set end_time = ?, end_temp = ?,fee = 1
+                             set end_time = ?, end_temp = ?,fee = ?
                              where id = ?
         '''
-        cursor.execute(updateDetailSql, (t2, temp1, updateId))
+        cursor.execute(updateDetailSql, (t2, temp1, addFee, updateId))
         cursor.close()
         conn.commit()
         conn.close()
+
+
+        connR = sqlite3.connect(dbpath)
+        cursorR = connR.cursor()
+        updateReportSql = '''update AirCondition_report
+                             set time = time + ? , fee = fee + ?
+                             where room_id = ?
+        '''
+        cursorR.execute(updateReportSql, ((i2 - i1), roomid, (i2 - i1) * feerate))
+        cursorR.close()
+        connR.commit()
+        connR.close()
 
     else:
         response['state'] = 'fail'
