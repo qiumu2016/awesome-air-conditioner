@@ -334,7 +334,7 @@ var changeT
         }else{
           this.$message({
             message: '未开机！',
-            type: 'warning'
+            type: 'warning' 
           });
         }
       },
