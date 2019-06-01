@@ -30,14 +30,14 @@ def feecalc(s): #根据风速求费率
 
 class conditioner:
     def __init__(self):
-        self.powe_on = 0
+        self.power_on = 0
         self.start_up = 0
 
 host = conditioner()
 
 def powerOn ():
     response = {}
-    host.powr_on = 1
+    host.power_on = 1
     response['state'] = 'ok'
     return JsonResponse(response)
 
