@@ -24,8 +24,12 @@ class myThread(threading.Thread):
                     obj.fee += obj.fee_rate
                     search.roomlist[obj.roomid].currentTemp += tempcalc(obj.mode,obj.wind)
                     if (obj.mode == 'cold' and search.roomlist[obj.roomid].currentTemp < obj.target_temp) or (obj.mode == 'hot' and search.roomlist[obj.roomid].currentTemp > obj.target_temp) :
-                        search.roomlist[obj.roomid].currentTemp = obj.target_temp
-                        
+                        roomid = obj.roomid
+                        search.roomlist[roomid].currentTemp = obj.target_temp
+                        search.roomlist[roomid].isServing = 0
+                        serviceid = search.roomlist[roomid].serviceid
+                        del search.servicelist[obj.id]
+                        del search.serviceobjlist[serviceid]
             for i in search.waitlist :
                 i.waittime -= 1
                 if i.waittime == 0:
@@ -53,7 +57,25 @@ class myThread(threading.Thread):
                     search.roomlist[i.roomid].isServing = 1
                     serviceobject.status = 1
                     search.serviceobjlist[serviceobject.id] = serviceobject
-
+            while (len(search.servicelist)<search.host.numServe) and (len(search.waitlist) > 0): #服务队列不满
+                obj = 0
+                flag = True
+                for i in search.waitlist:
+                    if flag :
+                        flag = False
+                        obj = i
+                    else:
+                        if i.waitclock < obj.waitclock:
+                            obj = i
+                roomid = obj.roomid
+                serviceobject = search.serviceobj(roomid) #新建一个服务对象
+                obj.serviceid = serviceobject.id
+                serviceobject.dispatchid = obj.id
+                search.roomlist[roomid].isServing = 1
+                serviceobject.status = 1
+                search.serviceobjlist[serviceobject.id] = serviceobject
+                del search.waitlist[obj]
+                search.servicelist[obj.id] = obj
 thread1 = myThread(1, "Thread-1", 1)
 
 thread1.start()
