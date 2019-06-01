@@ -101,7 +101,7 @@ import userHeader from '@/components/userheader.vue'
             })
             .catch((error) => {
               
-               this.$message.error(error.response.data.message);
+               this.$message.error(error.response.message);
             })
           } else {
             this.$message.error('请检查输入是否正确！');
@@ -127,7 +127,7 @@ import userHeader from '@/components/userheader.vue'
               }
             })
             .catch((error) => {
-               this.$message.error(error.response.data.message);
+               this.$message.error(error.response.message);
             })
           } else {
             this.$message.error('请检查输入是否正确！');

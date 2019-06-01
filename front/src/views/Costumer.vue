@@ -160,21 +160,21 @@ var changeT
             })
             .then((response) => {    
               if(response.status == 200){
-                this.isCheckIn = this.checkin[response.data.isCheckIn]
-                this.isOpen = this.open[response.data.isOpen]
-                this.ispower = this.open[response.data.isOpen]
-                this.isServing = this.serve[response.data.isServing]
-                this.cur_wind = response.data.wind = 'high'?'强风':response.data.wind = 'mid'?'中风':'弱风'
-                this.cur_temp = response.data.current_temp
-                this.fee_rate = response.data.fee_rate
-                this.fee = response.data.fee
+                this.isCheckIn = this.checkin[response.isCheckIn]
+                this.isOpen = this.open[response.isOpen]
+                this.ispower = this.open[response.isOpen]
+                this.isServing = this.serve[response.isServing]
+                this.cur_wind = response.wind = 'high'?'强风':response.wind = 'mid'?'中风':'弱风'
+                this.cur_temp = response.current_temp
+                this.fee_rate = response.fee_rate
+                this.fee = response.fee
                 if(this.ispower == '未开机'){
                   changeT = window.setInterval(this.changtemp(),1000); 
                 }
               }
             })
             .catch((error) => {
-               this.$message.error(error.response.data.message);
+               this.$message.error(error.response.message);
             })
       },
       request_on(){
@@ -196,16 +196,16 @@ var changeT
             })
             .then((response) => {    
               if(response.status == 200){
-                this.model = response.data.model = 'cold'?'制冷':'制暖'
-                this.set_temp = response.data.target_temp
-                this.maxt = response.data.temp_high_limit
-                this.mint = response.data.temp_low_limit
+                this.model = response.model = 'cold'?'制冷':'制暖'
+                this.set_temp = response.target_temp
+                this.maxt = response.temp_high_limit
+                this.mint = response.temp_low_limit
                 this.ispower = '已开机'
                 this.isOpen = '已开机'
               }
             })
             .catch((error) => {
-               this.$message.error(error.response.data.message);
+               this.$message.error(error.response.message);
             })
           
         }
@@ -236,7 +236,7 @@ var changeT
               }
             })
             .catch((error) => {
-               this.$message.error(error.response.data.message);
+               this.$message.error(error.response.message);
             })
         }
       },
@@ -264,7 +264,7 @@ var changeT
               }
             })
             .catch((error) => {
-               this.$message.error(error.response.data.message);
+               this.$message.error(error.response.message);
             })
           }
         }else{
@@ -299,7 +299,7 @@ var changeT
               }
             })
             .catch((error) => {
-               this.$message.error(error.response.data.message);
+               this.$message.error(error.response.message);
             })
           }
         }else{
@@ -328,7 +328,7 @@ var changeT
               }
             })
             .catch((error) => {
-               this.$message.error(error.response.data.message);
+               this.$message.error(error.response.message);
             })
           }
         }else{

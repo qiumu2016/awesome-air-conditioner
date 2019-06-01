@@ -194,7 +194,7 @@ import userHeader from '@/components/userheader.vue'
                 }
               })
               .catch((error) => {
-                this.$message.error(error.response.data.message);
+                this.$message.error(error.response.message);
               })
       },
       check(formName){
@@ -211,24 +211,24 @@ import userHeader from '@/components/userheader.vue'
               })
               .then((response) => {    
                 if(response.status == 200){
-                  this.isCheckIn = this.chechen[response.data.isCheckIn]
-                  this.isOpen = this.open[response.data.isOpen]
-                  this.isServing = this.serving[response.data.isServing]
-                  this.cur_temp = response.data.current_temp
-                  this.tar_temp = response.data.target_temp
-                  this.fee_rate = response.data.fee_rate
-                  this.fee = response.data.fee
-                  if(response.data.wind == 'high'){
+                  this.isCheckIn = this.chechen[response.isCheckIn]
+                  this.isOpen = this.open[response.isOpen]
+                  this.isServing = this.serving[response.isServing]
+                  this.cur_temp = response.current_temp
+                  this.tar_temp = response.target_temp
+                  this.fee_rate = response.fee_rate
+                  this.fee = response.fee
+                  if(response.wind == 'high'){
                     this.cur_wind = '强风'
-                  }else if (response.data.wind == 'mid'){
+                  }else if (response.wind == 'mid'){
                     this.cur_wind = '中风'
-                  }else if(response.data.wind == 'low'){
+                  }else if(response.wind == 'low'){
                     this.cur_wind = '弱风'
                   }
                 }
               })
               .catch((error) => {
-                this.$message.error(error.response.data.message);
+                this.$message.error(error.response.message);
               })   
           }else{
             this.$message.error('请检查输入是否正确！');
@@ -264,7 +264,7 @@ import userHeader from '@/components/userheader.vue'
                 }
               })
               .catch((error) => {
-                this.$message.error(error.response.data.message);
+                this.$message.error(error.response.message);
               })
           }else {
             this.$message.error('请检查输入是否正确！');
@@ -297,7 +297,7 @@ import userHeader from '@/components/userheader.vue'
               }
             })
             .catch((error) => {
-               this.$message.error(error.response.data.message);
+               this.$message.error(error.response.message);
             })
       },
       power_off(){
@@ -312,7 +312,7 @@ import userHeader from '@/components/userheader.vue'
               }
             })
             .catch((error) => {
-               this.$message.error(error.response.data.message);
+               this.$message.error(error.response.message);
             })
       }
     }
