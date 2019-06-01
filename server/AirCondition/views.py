@@ -1,3 +1,66 @@
 from django.shortcuts import render
+from rest_framework.views import APIView
+from django.http import JsonResponse
+from django.http import HttpResponse
 
-# Create your views here.
+from . import search
+
+class PowerOnView(APIView):
+    def post(self, request):
+        response = search.powerOn()
+        return response
+
+class SetParaView(APIView):
+    def post(self, request):
+        response = search.setPara(request)
+        return response
+
+class StartUpView(APIView):
+    def post(self, request):
+        response = search.startUp()
+        return response
+
+class CheckRoomStateView(APIView):
+    def post(self, request):
+        response = search.checkRoomState(request)
+        return response
+
+class PrintRDRView(APIView):
+    def post(self, request):
+        response = search.room.printRDR(self, request)
+        return response
+
+class PrintInvoiceView(APIView):
+    def post(self, request):
+        response = search.room.printInvoice(self, request)
+        return response
+
+class PrintReportView(APIView):
+    def post(self, request):
+        response = search.printReport(request)
+        return response
+    
+class RequestOnView(APIView):
+    def post(self, request):
+        response = search.requestOn(request)
+        return response
+
+class RequestOffView(APIView):
+    def post(self, request):
+        response = search.requestOff(request)
+        return response
+
+class ChangeTargetTempView(APIView):
+    def post(self, request):
+        response = search.changeTargetTemp(request)
+        return response
+
+class ChangeFanSpeedView(APIView):
+    def post(self, request):
+        response = search.changeFanSpeed(request)
+        return response
+
+class RequestInfoView(APIView):
+    def post(self, request):
+        response = search.requestInfo(request)
+        return response
