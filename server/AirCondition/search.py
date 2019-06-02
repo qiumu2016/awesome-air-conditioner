@@ -22,11 +22,11 @@ def cmpwind(s1,s2): # 0是小于，1是等于，2是大于
 
 def feecalc(s): #根据风速求费率
     if s == 'low' :
-        return 0.25
+        return 0.3
     elif s == 'mid' :
         return 0.5
     else:
-        return 0.75
+        return 1
 
 class conditioner:
     def __init__(self):
@@ -71,8 +71,8 @@ class room:
         self.isOpen = 0
         self.isServing = 0
         self.currentTemp = 27
-        #dispatchid
-        #serviceid
+        self.dispatchid = 0
+        self.serviceid = 0
 
     def printRDR(self,request): #打印详单
         response = {}
@@ -90,6 +90,8 @@ class room:
             cursor.execute(queryDetailSql, (roomid, dateIn, dateOut))
             values = cursor.fetchall()
             valuesStr = "".join(values)
+            cursor.close()
+            conn.close()
 
             mode = 'RDR_{}'
             with open(mode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
@@ -106,6 +108,14 @@ class room:
             roomid = request.POST['room_id']
             dateIn = request.POST['date_in']
             dateOut = request.POST['date_out']
+            self.isCheckIn = 0
+            dispatchid = self.dispatchid
+            if waitlist.__contains__(dispatchid) :
+                del waitlist[dispatchid]
+            else:
+                del servicelist[dispatchid]
+            serviceid = self.serviceid
+            del serviceobjlist[serviceid]
 
             conn = sqlite3.connect(dbpath)
             cursor = conn.cursor()
@@ -116,6 +126,8 @@ class room:
             cursor.execute(queryDetailSql, (roomid, dateIn, dateOut))
             values = cursor.fetchone()
             valuesStr = "".join(values)
+            cursor.close()
+            conn.close()
 
             mode = 'Invoice_{}'
             with open(mode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
@@ -139,9 +151,11 @@ class dispatch:
         self.fee_rate = fee_rate
         self.fee = 0
         self.mode = mode
+        self.feeprogress = 0
         #waittime
         #waitclock
         #serviceid
+        #feeprogress
 
 servicelist = {} #调度对象的服务队列
 waitlist = {} #调度对象的等待队列
@@ -285,13 +299,14 @@ def changeFanSpeed(request): #顾客更改空调风速
 
 def requestOn(request): #顾客请求开机
     response = {}
-    t1 = datetime.datetime.now()
     if request.POST:
         roomid = request.POST['room_id']
-        obj = dispatch(roomid,'low',27,0.25,'cold') #调度
+        obj = dispatch(roomid,'mid',27,0.5,'cold') #调度
         if not roomlist.__contains__(roomid):
             roomlist[roomid] = room(roomid)
-        roomlist[roomid].isCheckIn = 1
+        if roomlist[roomid].isCheckIn == 0:
+            roomlist[roomid].isCheckIn = 1
+            roomlist[roomid].checkInTime = datetime.datetime.now()
         roomlist[roomid].isOpen = 1
         roomlist[roomid].currentTemp = request.POST['current_room_temp']
         roomlist
@@ -317,7 +332,7 @@ def requestOn(request): #顾客请求开机
                     elif cmpwind(target.wind , i.wind) == 1 :
                         if target.clock > i.clock :
                             target = i
-            if cmpwind('low' , target.wind) == 0: #从队中挤出一个
+            if cmpwind('mid' , target.wind) == 0: #从队中挤出一个
                 del serviceobjlist[target.id]
                 obj2 = servicelist[target.dispatchid]
                 del servicelist[obj2]
@@ -332,7 +347,7 @@ def requestOn(request): #顾客请求开机
                 roomlist[roomid].isServing = 1
                 serviceobject.status = 1
                 serviceobjlist[serviceobject.id] = serviceobject
-            elif cmpwind('low' , target.wind) == 1: #进入等待队列
+            elif cmpwind('mid' , target.wind) == 1: #进入等待队列
                 waitlist[obj.id] = obj
                 obj.waitclock = time.time()
                 obj.waittime = 2
@@ -495,6 +510,8 @@ def printReport(request): #打印报表
         cursorR.execute(queryReportSql,roomid)
         values = cursorR.fetchall()
         valuesStr = "".join(values)
+        cursorR.close()
+        connR.close()
 
         mode = 'Report_{}'
         with open(mode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:

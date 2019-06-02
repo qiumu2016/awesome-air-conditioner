@@ -1,18 +1,11 @@
 import threading
 import time
+import datetime
 from . import search
+import sqlite3
 
-def tempcalc(smode,swind): #根据冷热风速计算变化速率
-    temp = 0.0
-    if swind == 'low':
-        temp = 0.5
-    elif swind == 'mid':
-        temp = 1.0
-    else:
-        temp = 1.5
-    if smode == 'cold':
-        temp = - temp
-    return temp
+
+dbpath = 'db [2]'
 
 class myThread(threading.Thread):
     def run(self):
@@ -21,15 +14,44 @@ class myThread(threading.Thread):
             for i in search.servicelist: #正在空调服务的房间空调变化
                 for j in search.serviceobjlist:
                     obj = search.servicelist[j.dispatchid]
-                    obj.fee += obj.fee_rate
-                    search.roomlist[obj.roomid].currentTemp += tempcalc(obj.mode,obj.wind)
-                    if (obj.mode == 'cold' and search.roomlist[obj.roomid].currentTemp < obj.target_temp) or (obj.mode == 'hot' and search.roomlist[obj.roomid].currentTemp > obj.target_temp) : #服务结束
+                    obj.feeprogress += 1
+                    temp = 1
+                    if obj.mode == 'cold' :
+                        temp = -1
+                    if (obj.wind == 'high') or (obj.wind == 'mid' and obj.feeprogress == 2) or (obj.wind == 'low' and obj.feeprogress == 3):
+                        search.roomlist[obj.roomid].currentTemp += temp
+                        temp = 0
+                        obj.fee += 1
+                    if search.roomlist[obj.roomid].currentTemp == obj.target_temp : #服务结束
                         roomid = obj.roomid
-                        search.roomlist[roomid].currentTemp = obj.target_temp
                         search.roomlist[roomid].isServing = 0
                         serviceid = search.roomlist[roomid].serviceid
                         del search.servicelist[obj.id]
                         del search.serviceobjlist[serviceid]
+
+                        t2 = datetime.datetime.now()
+
+                        conn = sqlite3.connect(dbpath)
+                        cursor = conn.cursor()
+                        queryDetailSql = '''select MAX(id)
+                                            from AirCondition_details
+                                            where room_id = ?
+                        '''
+                        cursor.execute(queryDetailSql,roomid)
+                        updateIdList = cursor.fetchone()
+                        updateIdStr = "".join(updateIdList)
+                        updateId = int(updateIdStr)
+                        updateDetailSql = '''update AirCondition_details
+                                             set end_time = ?, end_temp = ?, fee = ?
+                                             where id = ?
+                        '''
+                        cursor.execute(updateDetailSql, (t2, search.roomlist[obj.roomid].currentTemp, obj.fee, updateId))
+
+                        cursor.close()
+                        conn.commit()
+                        conn.close()
+
+
             for i in search.waitlist : #等待队列的等待时间减一
                 i.waittime -= 1
                 if i.waittime == 0: #已经到时，强行入队
