@@ -338,7 +338,8 @@ def requestOn(request): #顾客请求开机
             serviceobjlist[serviceobject.id] = serviceobject
         else:
             flag = True
-            for i in serviceobjlist:
+            target = 0
+            for i in serviceobjlist.values():
                 if flag:
                     target = i
                     flag = False

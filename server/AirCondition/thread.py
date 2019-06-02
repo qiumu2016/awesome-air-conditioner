@@ -11,8 +11,8 @@ class myThread(threading.Thread):
     def run(self):
         while 1:
             time.sleep(60)
-            for i in search.servicelist: #正在空调服务的房间空调变化
-                for j in search.serviceobjlist:
+            for i in search.servicelist.values(): #正在空调服务的房间空调变化
+                for j in search.serviceobjlist.values():
                     obj = search.servicelist[j.dispatchid]
                     obj.feeprogress += 1
                     temp = 1
@@ -52,12 +52,12 @@ class myThread(threading.Thread):
                         conn.close()
 
 
-            for i in search.waitlist : #等待队列的等待时间减一
+            for i in search.waitlist.values() : #等待队列的等待时间减一
                 i.waittime -= 1
                 if i.waittime == 0: #已经到时，强行入队
                     flag = True 
                     target = 0
-                    for j in search.serviceobjlist :
+                    for j in search.serviceobjlist.values() :
                         if flag :
                             flag = False
                             target = j
@@ -82,7 +82,7 @@ class myThread(threading.Thread):
             while (len(search.servicelist)<search.host.numServe) and (len(search.waitlist) > 0): #服务队列不满，从等待队列里拿
                 obj = 0
                 flag = True
-                for i in search.waitlist:
+                for i in search.waitlist.values():
                     if flag :
                         flag = False
                         obj = i
