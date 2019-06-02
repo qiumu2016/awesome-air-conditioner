@@ -5,6 +5,8 @@ import datetime
 import sqlite3
 import string
 
+import json
+
 dbpath = 'db [2]'
 
 def cmpwind(s1,s2): # 0是小于，1是等于，2是大于
@@ -43,16 +45,17 @@ def powerOn ():
 
 def setPara(request):
     response = {}
-    if request.POST:
-        host.mode = request.POST['model']
-        host.tempHighLimit = request.POST['temp_high_limit']
-        host.tempLowLimit = request.POST['temp_low_limit']
-        host.targetTemp = request.POST['default_target_temp']
-        host.feeRateH = request.POST['fee_rate_h']
-        host.feeRateM = request.POST['fee_rate_m']
-        host.feeRateL = request.POST['fee_rate_l']
-        host.numRooms = request.POST['num_rooms']
-        host.numServe = request.POST['num_serve']
+    request_post = json.loads(request.body)
+    if request_post:
+        host.mode = request_post['model']
+        host.tempHighLimit = request_post['temp_high_limit']
+        host.tempLowLimit = request_post['temp_low_limit']
+        host.targetTemp = request_post['default_target_temp']
+        host.feeRateH = request_post['fee_rate_h']
+        host.feeRateM = request_post['fee_rate_m']
+        host.feeRateL = request_post['fee_rate_l']
+        host.numRooms = request_post['num_rooms']
+        host.numServe = request_post['num_serve']
         response['state'] = 'ok'
     else:
         response['state'] = 'fail'
@@ -76,10 +79,11 @@ class room:
 
     def printRDR(self,request): #打印详单
         response = {}
-        if request.POST:
-            roomid = request.POST['room_id']
-            dateIn = request.POST['date_in']
-            dateOut = request.POST['date_out']
+        request_post = json.loads(request.body)
+        if request_post:
+            roomid = request_post['room_id']
+            dateIn = request_post['date_in']
+            dateOut = request_post['date_out']
 
             conn = sqlite3.connect(dbpath)
             cursor = conn.cursor()
@@ -104,10 +108,11 @@ class room:
 
     def printInvoice(self,request): #打印账单
         response = {}
-        if request.POST:
-            roomid = request.POST['room_id']
-            dateIn = request.POST['date_in']
-            dateOut = request.POST['date_out']
+        request_post = json.loads(request.body)
+        if request_post:
+            roomid = request_post['room_id']
+            dateIn = request_post['date_in']
+            dateOut = request_post['date_out']
             self.isCheckIn = 0
             dispatchid = self.dispatchid
             if waitlist.__contains__(dispatchid) :
@@ -176,8 +181,9 @@ serviceobjlist = {} #服务对象队列
 
 def checkRoomState(request): #查看房间状态
     response = {}
-    if request.POST:
-        roomid = request.POST['room_id']
+    request_post = json.loads(request.body)
+    if request_post:
+        roomid = request_post['room_id']
         if not (roomlist.__contains__(roomid)):
             roomlist[roomid] = room(roomid)
         response['isCheckIn'] = roomlist[roomid].isCheckIn
@@ -201,9 +207,10 @@ def checkRoomState(request): #查看房间状态
 
 def changeTargetTemp(request): #顾客更改空调目标温度
     response = {}
-    if request.POST:
-        roomid = request.POST['room_id']
-        temp = request.POST['target_temp']
+    request_post = json.loads(request.body)
+    if request_post:
+        roomid = request_post['room_id']
+        temp = request_post['target_temp']
         if roomlist.__contains__(roomid):
             if roomlist[roomid].isServing == 1 :
                 servicelist[roomlist[roomid].dispatchid].target_temp = temp
@@ -230,9 +237,10 @@ def changeTargetTemp(request): #顾客更改空调目标温度
 def changeFanSpeed(request): #顾客更改空调风速
     response = {}
     t2 = datetime.datetime.now()
-    if request.POST:
-        roomid = request.POST['room_id']
-        fan = request.POST['fan_speed']
+    request_post = json.loads(request.body)
+    if request_post:
+        roomid = request_post['room_id']
+        fan = request_post['fan_speed']
         if roomlist.__contains__(roomid):
             obj = 0
             if roomlist[roomid].isServing == 1 :
@@ -304,8 +312,9 @@ def changeFanSpeed(request): #顾客更改空调风速
 
 def requestOn(request): #顾客请求开机
     response = {}
-    if request.POST:
-        roomid = request.POST['room_id']
+    request_post = json.loads(request.body)
+    if request_post:
+        roomid = request_post['room_id']
         obj = dispatch(roomid,'mid',host.targetTemp,0.5,'cold') #调度
         if not roomlist.__contains__(roomid):
             roomlist[roomid] = room(roomid)
@@ -313,7 +322,7 @@ def requestOn(request): #顾客请求开机
             roomlist[roomid].isCheckIn = 1
             roomlist[roomid].checkInTime = datetime.datetime.now()
         roomlist[roomid].isOpen = 1
-        roomlist[roomid].currentTemp = request.POST['current_room_temp']
+        roomlist[roomid].currentTemp = request_post['current_room_temp']
         roomlist
         if len(servicelist)<host.numServe: #直接进入服务
             servicelist[obj.id] = obj
@@ -399,10 +408,11 @@ def requestOn(request): #顾客请求开机
 def requestOff(request): #顾客关机
     response = {}
     t2 = datetime.datetime.now()
-    if request.POST:
-        roomid = request.POST['room_id']
+    request_post = json.loads(request.body)
+    if request_post:
+        roomid = request_post['room_id']
 
-        roomlist[roomid].currentTemp = request.POST['current_room_temp']
+        roomlist[roomid].currentTemp = request_post['current_room_temp']
         dispatchid = roomlist[roomid].dispatchid
 
         if roomlist[roomid].isServing == 1:
@@ -471,8 +481,9 @@ def requestOff(request): #顾客关机
 
 def requestInfo(request): #每分钟查看一次费用
     response = {}
-    if request.POST:
-        roomid = request.POST['room_id']
+    request_post = json.loads(request.body)
+    if request_post:
+        roomid = request_post['room_id']
         if roomlist.__contains__(roomid) :
             response['isCheckIn'] = roomlist[roomid].isCheckIn
             response['isOpen'] = roomlist[roomid].isOpen
@@ -495,8 +506,9 @@ def requestInfo(request): #每分钟查看一次费用
 
 def printReport(request): #打印报表
     response = {}
-    if request.POST:
-        roomid = request.POST['room_id']
+    request_post = json.loads(request.body)
+    if request_post:
+        roomid = request_post['room_id']
         connR = sqlite3.connect(dbpath)
         cursorR = connR.cursor()
         queryReportSql = '''select *
