@@ -53,14 +53,20 @@ import userHeader from '@/components/userheader.vue'
     },
     data() {
       return{
-         radio: '0'
+        url:'',
+        roomId:'',
+        radio: '0'
       }
     },
-    
-    mounted(){
-        
+    created(){
+      this.init();
     },
+    
     methods:{
+      init(){
+        this.url = sessionStorage.getItem("url")
+        this.roomId = sessionStorage.getItem("roomId")
+      },
       to_home(){
         this.$router.push('/');
       },
@@ -71,7 +77,7 @@ import userHeader from '@/components/userheader.vue'
           this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: '/api/manager/print_report',
+              url: this.url+'/manager/print_report',
               data : sent
             })
             .then((response) => {    

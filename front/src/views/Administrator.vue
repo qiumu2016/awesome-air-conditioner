@@ -147,6 +147,8 @@ import userHeader from '@/components/userheader.vue'
     },
     data() {
       return{
+        url:'',
+        roomId:'',
         disabled:true,
         isPoweron:'未开机',
         checkForm: {
@@ -176,16 +178,22 @@ import userHeader from '@/components/userheader.vue'
         }
       }
     },
-    
+    created(){
+      this.init();
+    },
     mounted(){
         
     },
     methods:{
+      init(){
+        this.url = sessionStorage.getItem("url")
+        this.roomId = sessionStorage.getItem("roomId")
+      },
       start_up(){
         this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: '/api/administrator/start_up',
+              url: this.url+'/administrator/start_up',
               data : sent
               })
               .then((response) => {    
@@ -206,7 +214,7 @@ import userHeader from '@/components/userheader.vue'
              this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: '/api/administrator/check_room_state',
+              url: this.url+'/administrator/check_room_state',
               data : sent
               })
               .then((response) => {    
@@ -254,7 +262,7 @@ import userHeader from '@/components/userheader.vue'
              this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: '/api/administrator/set_para',
+              url: this.url+'/administrator/set_para',
               data : sent
               })
               .then((response) => {    
@@ -289,7 +297,7 @@ import userHeader from '@/components/userheader.vue'
           this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: '/api/administrator/power_on',
+              url: this.url+'/administrator/power_on',
             })
             .then((response) => {    
               if(response.status == 200){
@@ -304,7 +312,7 @@ import userHeader from '@/components/userheader.vue'
         this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: '/api/administrator/power_off',
+              url: this.url+'/administrator/power_off',
             })
             .then((response) => {    
               if(response.status == 200){
