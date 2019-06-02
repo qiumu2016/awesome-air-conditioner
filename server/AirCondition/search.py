@@ -22,11 +22,11 @@ def cmpwind(s1,s2): # 0是小于，1是等于，2是大于
 
 def feecalc(s): #根据风速求费率
     if s == 'low' :
-        return 0.25
+        return 0.3
     elif s == 'mid' :
         return 0.5
     else:
-        return 0.75
+        return 1
 
 class conditioner:
     def __init__(self):
@@ -139,9 +139,11 @@ class dispatch:
         self.fee_rate = fee_rate
         self.fee = 0
         self.mode = mode
+        self.feeprogress = 0
         #waittime
         #waitclock
         #serviceid
+        #feeprogress
 
 servicelist = {} #调度对象的服务队列
 waitlist = {} #调度对象的等待队列
