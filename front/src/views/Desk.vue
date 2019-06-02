@@ -66,19 +66,27 @@ import userHeader from '@/components/userheader.vue'
     },
     data() {
       return {
-       rdrForm: {
-         roomId: '',
-       },
-       invForm: {
-         roomId: '',
-       },
+        url:'',
+        roomId:'',
+        rdrForm: {
+          roomId: '',
+        },
+        invForm: {
+          roomId: '',
+        },
       }
     },
-    
+    created(){
+      this.init();
+    },
     mounted(){
         
     },
     methods:{
+      init(){
+        this.url = sessionStorage.getItem("url")
+        this.roomId = sessionStorage.getItem("roomId")
+      },
       to_home(){
         this.$router.push('/');
       },
@@ -91,7 +99,7 @@ import userHeader from '@/components/userheader.vue'
             this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: '/api/desk/print_rdr',
+              url: this.url+'/desk/print_rdr',
               data : sent
             })
             .then((response) => {    
@@ -118,7 +126,7 @@ import userHeader from '@/components/userheader.vue'
             this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: '/api/desk/print_invoice',
+              url: this.url+'/desk/print_invoice',
               data : sent
             })
             .then((response) => {    

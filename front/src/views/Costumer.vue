@@ -91,9 +91,10 @@ var changeT
     },
     data() {
       return {
+       url:'',
        img1:{id:1, src:require('../images/power.gif')},
        img2:{id:2, src:require('../images/power1.jpeg')},
-       roomId:'310e',
+       roomId:'',
        set_temp:24,
        model:'制冷',
        cur_temp:'',
@@ -129,6 +130,8 @@ var changeT
     methods:{
       init(){
         this.cur_temp = this.outdoor
+        this.url = sessionStorage.getItem("url")
+        this.roomId = sessionStorage.getItem("roomId")
       },
       changtemp(){
         if(this.ispower =='未开机'){
@@ -155,7 +158,7 @@ var changeT
           this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: '/api/customer/request_info',
+              url: this.url+'/customer/request_info',
               data : sent
             })
             .then((response) => {    
@@ -191,7 +194,7 @@ var changeT
           this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: '/api/customer/request_on',
+              url: this.url+'/customer/request_on',
               data : sent
             })
             .then((response) => {    
@@ -225,7 +228,7 @@ var changeT
           this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: '/api/customer/request_off',
+              url: this.url+'/customer/request_off',
               data : sent
             })
             .then((response) => {    
@@ -255,7 +258,7 @@ var changeT
           this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: '/api/customer/change_target_temp',
+              url: this.url+'/customer/change_target_temp',
               data : sent
             })
             .then((response) => {    
@@ -290,7 +293,7 @@ var changeT
           this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: '/api/customer/change_target_temp',
+              url: this.url+'/customer/change_target_temp',
               data : sent
             })
             .then((response) => {    
@@ -319,7 +322,7 @@ var changeT
           this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: '/api/customer/change_fan_speed',
+              url: this.url+'/customer/change_fan_speed',
               data : sent
             })
             .then((response) => {    
