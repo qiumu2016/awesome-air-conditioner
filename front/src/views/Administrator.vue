@@ -193,8 +193,10 @@ import userHeader from '@/components/userheader.vue'
         this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: this.url+'/administrator/start_up',
-              data : sent
+              url: this.url+'/administrator/start_up/',
+              withCredentials: true,
+              crossDomain:true,
+              changeOrigin: true,
               })
               .then((response) => {    
                 if(response.status == 200){
@@ -214,8 +216,11 @@ import userHeader from '@/components/userheader.vue'
              this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: this.url+'/administrator/check_room_state',
-              data : sent
+              url: this.url+'/administrator/check_room_state/',
+              data : sent,
+               withCredentials: true,
+              crossDomain:true,
+              changeOrigin: true,
               })
               .then((response) => {    
                 if(response.status == 200){
@@ -262,8 +267,11 @@ import userHeader from '@/components/userheader.vue'
              this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: this.url+'/administrator/set_para',
-              data : sent
+              url: this.url+'/administrator/set_para/',
+              data : sent,
+               withCredentials: true,
+              crossDomain:true,
+              changeOrigin: true,
               })
               .then((response) => {    
                 if(response.status == 200){
@@ -297,7 +305,10 @@ import userHeader from '@/components/userheader.vue'
           this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: this.url+'/administrator/power_on',
+              url: this.url+'/administrator/power_on/',
+              withCredentials: true,
+              crossDomain:true,
+              changeOrigin: true,
             })
             .then((response) => {    
               if(response.status == 200){
@@ -312,7 +323,10 @@ import userHeader from '@/components/userheader.vue'
         this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: this.url+'/administrator/power_off',
+              url: this.url+'/administrator/power_off/',
+              withCredentials: true,
+              crossDomain:true,
+              changeOrigin: true,
             })
             .then((response) => {    
               if(response.status == 200){

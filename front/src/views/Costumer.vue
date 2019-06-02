@@ -153,12 +153,15 @@ var changeT
       },
       request_info(){
         let sent = {
-              room_id :'310',
+              room_id :this.roomId,
             }
           this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: this.url+'/customer/request_info',
+              url: this.url+'/customer/request_info/',
+               withCredentials: true,
+              crossDomain:true,
+              changeOrigin: true,
               data : sent
             })
             .then((response) => {    
@@ -188,13 +191,16 @@ var changeT
           });
         } else if(this.ispower == '未开机'){
            let sent = {
-              room_id :'310',
+              room_id :this.roomId,
               current_room_temp :this.cur_temp
             }
           this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: this.url+'/customer/request_on',
+              url: this.url+'/customer/request_on/',
+               withCredentials: true,
+              crossDomain:true,
+              changeOrigin: true,
               data : sent
             })
             .then((response) => {    
@@ -222,13 +228,16 @@ var changeT
           });
         } else if(this.ispower == '已开机'){
            let sent = {
-              room_id :'310',
+              room_id :this.roomId,
               current_room_temp :this.cur_temp
             }
           this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: this.url+'/customer/request_off',
+              url: this.url+'/customer/request_off/',
+               withCredentials: true,
+              crossDomain:true,
+              changeOrigin: true,
               data : sent
             })
             .then((response) => {    
@@ -252,13 +261,16 @@ var changeT
           });
          }else {
            let sent = {
-              room_id :'310',
+              room_id :this.roomId,
               target_temp :this.set_temp+1
             }
           this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: this.url+'/customer/change_target_temp',
+              url: this.url+'/customer/change_target_temp/',
+               withCredentials: true,
+              crossDomain:true,
+              changeOrigin: true,
               data : sent
             })
             .then((response) => {    
@@ -287,13 +299,16 @@ var changeT
           });
          }else {
            let sent = {
-              room_id :'310',
+              room_id :this.roomId,
               target_temp :this.set_temp-1
             }
           this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: this.url+'/customer/change_target_temp',
+              url: this.url+'/customer/change_target_temp/',
+               withCredentials: true,
+              crossDomain:true,
+              changeOrigin: true,
               data : sent
             })
             .then((response) => {    
@@ -316,13 +331,16 @@ var changeT
         if(this.ispower == '已开机'){
           if(this.set_wind !=this.wind[wind]){
              let sent = {
-              room_id :'310',
+              room_id :this.roomId,
               fan_speed :this.winden[wind]
             }
           this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: this.url+'/customer/change_fan_speed',
+              url: this.url+'/customer/change_fan_speed/',
+               withCredentials: true,
+              crossDomain:true,
+              changeOrigin: true,
               data : sent
             })
             .then((response) => {    
