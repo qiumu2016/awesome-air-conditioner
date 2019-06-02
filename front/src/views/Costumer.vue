@@ -28,8 +28,8 @@
             <el-row><span class = "text">是否服务：{{isServing}}</span></el-row>
             <el-row><span class = "text">当前风速：{{cur_wind}}</span></el-row>
             <el-row><span class = "text">当前温度：{{cur_temp}}℃</span></el-row>
-            <el-row><span class = "text">当前费率：{{fee_rate}}</span></el-row>
-            <el-row><span class = "text">当前费用：{{fee}}</span></el-row>
+            <el-row><span class = "text">当前费率：{{fee_rate}}元/分</span></el-row>
+            <el-row><span class = "text">当前费用：{{fee}}</span>元</el-row>
           </div>
         </el-col>
         <el-col :span="12">
@@ -65,15 +65,24 @@
        </el-col>
        <el-col :span="8">
          <div class="image"> 
-           <img v-show="ispower == '已开机'" :src = "img1.src" height="180" width="550">
-           <img v-show="ispower == '未开机'" :src = "img2.src" height="180" width="550">
+           <img v-show="isServing == '正在服务'" :src = "img1.src" height="273" width="500">
+           <img v-show="isServing != '正在服务'" :src = "img2.src" height="273" width="500">
          </div>
        </el-col>
        <el-col :span="8">
        </el-col>
     </el-row>
     </el-main>
-   
+   <el-dialog
+  title="设置初始温度"
+  :visible.sync="dialogVisible"
+  width="30%"
+  :before-close="handleClose">
+  <el-input v-model="outdoor" placeholder="请输入初始温度数值"></el-input>
+  <span slot="footer" class="dialog-footer">
+    <el-button @click="set_oritemp()">确 定</el-button>
+  </span>
+</el-dialog>
   </el-container>
 
 </template>
@@ -82,6 +91,7 @@
 import Myfooter from '@/components/myfooter.vue'
 import userHeader from '@/components/userheader.vue'
 var InitSetInterval
+var testT
 var changeT
   export default {
     name:'Costumer',
@@ -91,6 +101,7 @@ var changeT
     },
     data() {
       return {
+        dialogVisible: true,
        url:'',
        img1:{id:1, src:require('../images/power.gif')},
        img2:{id:2, src:require('../images/power1.jpeg')},
@@ -114,12 +125,12 @@ var changeT
        checkin:['未入住','已入住'],
        open:['未开机','已开机'],
        serve:['正在服务','未在服务'],
-       outdoor:30,
+       outdoor:'',
       }
     },
     created(){
-      InitSetInterval = setInterval(this.request_info(),1000)
       this.init();
+      
     },
     mounted(){
         
@@ -128,6 +139,14 @@ var changeT
       clearInterval(InitSetInterval)
     },
     methods:{
+      test(){
+        this.outdoor++;
+        console.log(this.outdoor)
+      },
+      set_oritemp(){
+        this.dialogVisible = false
+        //testT = window.setInterval(this.test,1000); 
+      },
       init(){
         this.cur_temp = this.outdoor
         this.url = sessionStorage.getItem("url")
@@ -159,37 +178,39 @@ var changeT
               type: 'HEAD',
               method: 'post',
               url: this.url+'/customer/request_info/',
-               withCredentials: true,
+              withCredentials: true,
               crossDomain:true,
               changeOrigin: true,
               data : sent
             })
             .then((response) => {    
               if(response.status == 200){
-                this.isCheckIn = this.checkin[response.isCheckIn]
-                this.isOpen = this.open[response.isOpen]
-                this.ispower = this.open[response.isOpen]
-                this.isServing = this.serve[response.isServing]
-                this.cur_wind = response.wind = 'high'?'强风':response.wind = 'mid'?'中风':'弱风'
-                this.cur_temp = response.current_temp
-                this.fee_rate = response.fee_rate
-                this.fee = response.fee
+                console.log(response)
+                this.isCheckIn = this.checkin[response.data.isCheckIn]
+                this.isOpen = this.open[response.data.isOpen]
+                this.ispower = this.open[response.data.isOpen]
+                this.isServing = this.serve[response.data.isServing]
+                this.cur_wind = response.data.wind = 'high'?'强风':response.data.wind = 'mid'?'中风':'弱风'
+                this.cur_temp = response.data.current_temp
+                this.fee_rate = response.data.fee_rate
+                this.fee = response.data.fee
                 if(this.ispower == '未开机'){
-                  changeT = window.setInterval(this.changtemp(),1000); 
+                  changeT = window.setInterval(this.changtemp,1000); 
                 }
               }
             })
             .catch((error) => {
-               this.$message.error(error.response.message);
+               console.log(error.response);
             })
       },
       request_on(){
+        
         if(this.ispower == '已开机'){
           this.$message({
             message: '已开机！',
             type: 'warning'
           });
-        } else if(this.ispower == '未开机'){
+        } else if(this.ispower != '已开机'){
            let sent = {
               room_id :this.roomId,
               current_room_temp :this.cur_temp
@@ -205,16 +226,17 @@ var changeT
             })
             .then((response) => {    
               if(response.status == 200){
-                this.model = response.model = 'cold'?'制冷':'制暖'
-                this.set_temp = response.target_temp
-                this.maxt = response.temp_high_limit
-                this.mint = response.temp_low_limit
+                InitSetInterval = setInterval(this.request_info,1000)
+                this.model = response.data.model = 'cold'?'制冷':'制暖'
+                this.set_temp = response.data.target_temp
+                this.maxt = response.data.temp_high_limit
+                this.mint = response.data.temp_low_limit
                 this.ispower = '已开机'
                 this.isOpen = '已开机'
               }
             })
             .catch((error) => {
-               this.$message.error(error.response.message);
+               this.$message.error(error.response.data.message);
             })
           
         }
@@ -226,7 +248,7 @@ var changeT
             message: '未开机！',
             type: 'warning'
           });
-        } else if(this.ispower == '已开机'){
+        } else if(this.ispower != '未开机'){
            let sent = {
               room_id :this.roomId,
               current_room_temp :this.cur_temp
@@ -244,11 +266,11 @@ var changeT
               if(response.status == 200){
                 this.ispower = '未开机'
                 this.isOpen = '未开机'
-                changeT = window.setInterval(this.changtemp(),1000); 
+                changeT = window.setInterval(this.changtemp,1000); 
               }
             })
             .catch((error) => {
-               this.$message.error(error.response.message);
+               this.$message.error(error.response.data.message);
             })
         }
       },
@@ -279,7 +301,7 @@ var changeT
               }
             })
             .catch((error) => {
-               this.$message.error(error.response.message);
+               this.$message.error(error.response.data.message);
             })
           }
         }else{
@@ -317,7 +339,7 @@ var changeT
               }
             })
             .catch((error) => {
-               this.$message.error(error.response.message);
+               this.$message.error(error.response.data.message);
             })
           }
         }else{
@@ -349,7 +371,7 @@ var changeT
               }
             })
             .catch((error) => {
-               this.$message.error(error.response.message);
+               this.$message.error(error.response.data.message);
             })
           }
         }else{
@@ -403,11 +425,13 @@ var changeT
   .image{
     border-radius: 15px;
     line-height: 16px;
-    position: relative;
-    left: 90%;
+    position: absolute;
+    left: 30%;
+    bottom: -210px;
     width: 600px;
-    height: 180px;
-    padding: 15px;
+    height: 280px;
+    padding: 5px;
+    padding-bottom: 5px;
     text-align:center;
     background:rgba(255, 255, 255, 0.7);
   }
