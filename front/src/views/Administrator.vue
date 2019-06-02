@@ -119,8 +119,8 @@
             <el-row><span class = "text">当前风速：{{cur_wind}}</span></el-row>
             <el-row><span class = "text">当前温度：{{cur_temp}}℃</span></el-row>
             <el-row><span class = "text">目标温度：{{tar_temp}}℃</span></el-row>
-            <el-row><span class = "text">当前费率：{{fee_rate}}</span></el-row>
-            <el-row><span class = "text">当前费用：{{fee}}</span></el-row>
+            <el-row><span class = "text">当前费率：{{fee_rate}}元/分</span></el-row>
+            <el-row><span class = "text">当前费用：{{fee}}元</span></el-row>
           </div>
         </el-col>
       </el-row>
@@ -218,7 +218,7 @@ import userHeader from '@/components/userheader.vue'
         this.$refs[formName].validate((valid) => {
           if (valid) {
             let sent ={
-              room_id:this.checkForm.roomId
+              room_id:this.checkForm.roomId.toString()
             }
              this.$ajax({
               type: 'HEAD',

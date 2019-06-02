@@ -29,7 +29,7 @@
             <el-row><span class = "text">当前风速：{{cur_wind}}</span></el-row>
             <el-row><span class = "text">当前温度：{{cur_temp}}℃</span></el-row>
             <el-row><span class = "text">当前费率：{{fee_rate}}元/分</span></el-row>
-            <el-row><span class = "text">当前费用：{{fee}}</span>元</el-row>
+            <el-row><span class = "text">当前费用：{{fee}}元</span></el-row>
           </div>
         </el-col>
         <el-col :span="12">
@@ -109,7 +109,7 @@ var changeT
        set_temp:24,
        model:'制冷',
        cur_temp:'',
-       set_wind:'中风',
+       set_wind:'强风',
        wind:'low',
        cur_wind:'',
        ispower:'未开机',
@@ -124,7 +124,7 @@ var changeT
        mint:'',
        checkin:['未入住','已入住'],
        open:['未开机','已开机'],
-       serve:['正在服务','未在服务'],
+       serve:['未在服务','正在服务'],
        outdoor:'',
       }
     },
@@ -144,6 +144,7 @@ var changeT
         console.log(this.outdoor)
       },
       set_oritemp(){
+        console.log(this.outdoor)
         this.dialogVisible = false
         //testT = window.setInterval(this.test,1000); 
       },
@@ -185,12 +186,11 @@ var changeT
             })
             .then((response) => {    
               if(response.status == 200){
-                console.log(response)
                 this.isCheckIn = this.checkin[response.data.isCheckIn]
                 this.isOpen = this.open[response.data.isOpen]
                 this.ispower = this.open[response.data.isOpen]
                 this.isServing = this.serve[response.data.isServing]
-                this.cur_wind = response.data.wind = 'high'?'强风':response.data.wind = 'mid'?'中风':'弱风'
+                this.cur_wind = response.data.wind == 'high'?'强风':response.data.wind == 'mid'?'中风':'弱风'
                 this.cur_temp = response.data.current_temp
                 this.fee_rate = response.data.fee_rate
                 this.fee = response.data.fee
@@ -213,7 +213,7 @@ var changeT
         } else if(this.ispower != '已开机'){
            let sent = {
               room_id :this.roomId,
-              current_room_temp :this.cur_temp
+              current_room_temp :this.outdoor
             }
           this.$ajax({
               type: 'HEAD',
@@ -314,7 +314,7 @@ var changeT
       },
       temp_dec(){
         if(this.ispower == '已开机'){
-         if(this.set_temp-1 < this.maxt){
+         if(this.set_temp-1 < this.mint){
             this.$message({
             message: '超出可设定温度下限！',
             type: 'warning'
