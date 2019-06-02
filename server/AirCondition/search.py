@@ -134,6 +134,7 @@ class room:
                 f.write(valuesStr)
 
             response['state'] = 'ok'
+            self.isCheckIn = 0
         else:
             response['state'] = 'fail'
         return JsonResponse(response)
