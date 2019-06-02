@@ -90,7 +90,7 @@ import userHeader from '@/components/userheader.vue'
             })
             .catch((error) => {
               
-               this.$message.error(error.response.message);
+               this.$message.error(error.response.data.message);
             })
         }
     }

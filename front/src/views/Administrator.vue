@@ -30,7 +30,7 @@
                           </el-row>
           </div>
            <div class = 'set_p'>
-             <el-form ref="form" :model="form" label-width="130px" size="mini">
+             <el-form ref="form" :model="form" :rules="Rules" label-width="130px" size="mini">
                 <el-form-item label="工作模式：">
                   <el-radio-group v-model="form.model">
                     <el-radio label="hot">制暖</el-radio>
@@ -66,24 +66,18 @@
                     <template slot="append">℃</template>
                   </el-input>
                 </el-form-item>
-                <el-form-item label="高风速费率：" prop="fee_rate_h" :rules="[
-                      { required: true, message: '费率不能为空'},
-                      { type: 'number', message: '必须为数字值'}]">
-                  <el-input v-model.number="form.fee_rate_h">
+                <el-form-item label="高风速费率：" prop="fee_rate_h">
+                  <el-input  v-model="form.fee_rate_h">
                     <template slot="append">元/分钟</template>
                   </el-input>
                 </el-form-item>
-                <el-form-item label="中风速费率：" prop="fee_rate_m" :rules="[
-                      { required: true, message: '费率不能为空'},
-                      { type: 'number', message: '必须为数字值'}]">
-                  <el-input v-model.number="form.fee_rate_m">
+                <el-form-item label="中风速费率：" prop="fee_rate_m">
+                  <el-input v-model="form.fee_rate_m">
                     <template slot="append">元/分钟</template>
                   </el-input>
                 </el-form-item>
-                <el-form-item label="低风速费率：" prop="fee_rate_l" :rules="[
-                      { required: true, message: '费率不能为空'},
-                      { type: 'number', message: '必须为数字值'}]">
-                  <el-input v-model.number="form.fee_rate_l">
+                <el-form-item label="低风速费率：" prop="fee_rate_l">
+                  <el-input v-model="form.fee_rate_l">
                     <template slot="append">元/分钟</template>
                   </el-input>
                 </el-form-item>
@@ -125,8 +119,8 @@
             <el-row><span class = "text">当前风速：{{cur_wind}}</span></el-row>
             <el-row><span class = "text">当前温度：{{cur_temp}}℃</span></el-row>
             <el-row><span class = "text">目标温度：{{tar_temp}}℃</span></el-row>
-            <el-row><span class = "text">当前费率：{{fee_rate}}</span></el-row>
-            <el-row><span class = "text">当前费用：{{fee}}</span></el-row>
+            <el-row><span class = "text">当前费率：{{fee_rate}}元/分</span></el-row>
+            <el-row><span class = "text">当前费用：{{fee}}元</span></el-row>
           </div>
         </el-col>
       </el-row>
@@ -146,6 +140,16 @@ import userHeader from '@/components/userheader.vue'
      Myfooter,
     },
     data() {
+      var regnum = /^([1-9][0-9]*)+(.[0-9]{1,2})?$/
+      var check = (rule, value, callback) => {
+         if (value ===""){
+          callback(new Error('请输入数字！'))
+        } else if(!regnum.test(value)){
+            callback(new Error('请输入两位小数！'))
+          } else {
+            callback();
+          }
+      };
       return{
         url:'',
         roomId:'',
@@ -170,12 +174,15 @@ import userHeader from '@/components/userheader.vue'
           mint:20,
           maxt:30,
           target:24,
-          fee_rate_h:3,
-          fee_rate_m:2,
-          fee_rate_l:1,
+          fee_rate_h:1,
+          fee_rate_m:0.5,
+          fee_rate_l:0.3,
           num_rooms:5,
           num_serve:3,
-        }
+        },
+      Rules:{
+         
+      }
       }
     },
     created(){
@@ -204,14 +211,14 @@ import userHeader from '@/components/userheader.vue'
                 }
               })
               .catch((error) => {
-                this.$message.error(error.response.message);
+                this.$message.error(error.response.data.message);
               })
       },
       check(formName){
         this.$refs[formName].validate((valid) => {
           if (valid) {
             let sent ={
-              room_id:this.checkForm.roomId
+              room_id:this.checkForm.roomId.toString()
             }
              this.$ajax({
               type: 'HEAD',
@@ -224,24 +231,24 @@ import userHeader from '@/components/userheader.vue'
               })
               .then((response) => {    
                 if(response.status == 200){
-                  this.isCheckIn = this.chechen[response.isCheckIn]
-                  this.isOpen = this.open[response.isOpen]
-                  this.isServing = this.serving[response.isServing]
-                  this.cur_temp = response.current_temp
-                  this.tar_temp = response.target_temp
-                  this.fee_rate = response.fee_rate
-                  this.fee = response.fee
-                  if(response.wind == 'high'){
+                  this.isCheckIn = this.chechen[response.data.isCheckIn]
+                  this.isOpen = this.open[response.data.isOpen]
+                  this.isServing = this.serving[response.data.isServing]
+                  this.cur_temp = response.data.current_temp
+                  this.tar_temp = response.data.target_temp
+                  this.fee_rate = response.data.fee_rate
+                  this.fee = response.data.fee
+                  if(response.data.wind == 'high'){
                     this.cur_wind = '强风'
-                  }else if (response.wind == 'mid'){
+                  }else if (response.data.wind == 'mid'){
                     this.cur_wind = '中风'
-                  }else if(response.wind == 'low'){
+                  }else if(response.data.wind == 'low'){
                     this.cur_wind = '弱风'
                   }
                 }
               })
               .catch((error) => {
-                this.$message.error(error.response.message);
+                this.$message.error(error.response.data.message);
               })   
           }else{
             this.$message.error('请检查输入是否正确！');
@@ -280,7 +287,7 @@ import userHeader from '@/components/userheader.vue'
                 }
               })
               .catch((error) => {
-                this.$message.error(error.response.message);
+                this.$message.error(error.response.data.message);
               })
           }else {
             this.$message.error('请检查输入是否正确！');
@@ -316,7 +323,7 @@ import userHeader from '@/components/userheader.vue'
               }
             })
             .catch((error) => {
-               this.$message.error(error.response.message);
+               this.$message.error(error.response.data.message);
             })
       },
       power_off(){
@@ -334,7 +341,7 @@ import userHeader from '@/components/userheader.vue'
               }
             })
             .catch((error) => {
-               this.$message.error(error.response.message);
+               this.$message.error(error.response.data.message);
             })
       }
     }
