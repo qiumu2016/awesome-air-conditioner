@@ -299,7 +299,6 @@ def changeFanSpeed(request): #顾客更改空调风速
 
 def requestOn(request): #顾客请求开机
     response = {}
-    
     if request.POST:
         roomid = request.POST['room_id']
         obj = dispatch(roomid,'low',27,0.25,'cold') #调度
@@ -307,12 +306,10 @@ def requestOn(request): #顾客请求开机
             roomlist[roomid] = room(roomid)
         if roomlist[roomid].isCheckIn == 0:
             roomlist[roomid].isCheckIn = 1
-            t1 = datetime.datetime.now()
+            roomlist[roomid].checkInTime = datetime.datetime.now()
         roomlist[roomid].isOpen = 1
         roomlist[roomid].currentTemp = request.POST['current_room_temp']
         roomlist
-        if not room.checkInTime:
-            room.checkInTime = t1
         if len(servicelist)<host.numServe: #直接进入服务
             servicelist[obj.id] = obj
             serviceobject = serviceobj(roomid)
