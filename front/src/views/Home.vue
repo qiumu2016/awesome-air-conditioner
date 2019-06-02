@@ -114,10 +114,18 @@
     },
     computed:{
     },
+    created(){
+      this.init()
+    },
     mounted(){
       //console.log(this.$store.getters.isLogin)
     },
     methods:{
+      init(){
+        if(sessionStorage.getItem("url") !='null'){
+          this.form.url = sessionStorage.getItem("url")
+        }
+      },
       set_para(formName){
          this.$refs[formName].validate((valid) => {
           if (valid) {
