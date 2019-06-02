@@ -106,6 +106,8 @@ class room:
             roomid = request.POST['room_id']
             dateIn = request.POST['date_in']
             dateOut = request.POST['date_out']
+            self.isCheckIn = 0
+            del dispatch
 
             conn = sqlite3.connect(dbpath)
             cursor = conn.cursor()
@@ -116,6 +118,8 @@ class room:
             cursor.execute(queryDetailSql, (roomid, dateIn, dateOut))
             values = cursor.fetchone()
             valuesStr = "".join(values)
+
+
 
             mode = 'Invoice_{}'
             with open(mode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
@@ -295,6 +299,8 @@ def requestOn(request): #顾客请求开机
         roomlist[roomid].isOpen = 1
         roomlist[roomid].currentTemp = request.POST['current_room_temp']
         roomlist
+        if not room.checkInTime:
+            room.checkInTime = t1
         if len(servicelist)<host.numServe: #直接进入服务
             servicelist[obj.id] = obj
             serviceobject = serviceobj(roomid)

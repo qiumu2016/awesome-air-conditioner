@@ -1,6 +1,11 @@
 import threading
 import time
+import datetime
 from . import search
+import sqlite3
+
+
+dbpath = 'db [2]'
 
 def tempcalc(smode,swind): #根据冷热风速计算变化速率
     temp = 0.0
@@ -30,6 +35,30 @@ class myThread(threading.Thread):
                         serviceid = search.roomlist[roomid].serviceid
                         del search.servicelist[obj.id]
                         del search.serviceobjlist[serviceid]
+
+                        t2 = datetime.datetime.now()
+
+                        conn = sqlite3.connect(dbpath)
+                        cursor = conn.cursor()
+                        queryDetailSql = '''select MAX(id)
+                                            from AirCondition_details
+                                            where room_id = ?
+                        '''
+                        cursor.execute(queryDetailSql,roomid)
+                        updateIdList = cursor.fetchone()
+                        updateIdStr = "".join(updateIdList)
+                        updateId = int(updateIdStr)
+                        updateDetailSql = '''update AirCondition_details
+                                             set end_time = ?, end_temp = ?, fee = ?
+                                             where id = ?
+                        '''
+                        cursor.execute(updateDetailSql, (t2, search.roomlist[obj.roomid].currentTemp, obj.fee, updateId))
+
+                        cursor.close()
+                        conn.commit()
+                        conn.close()
+
+
             for i in search.waitlist : #等待队列的等待时间减一
                 i.waittime -= 1
                 if i.waittime == 0: #已经到时，强行入队
