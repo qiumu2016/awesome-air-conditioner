@@ -71,8 +71,8 @@ class room:
         self.isOpen = 0
         self.isServing = 0
         self.currentTemp = 27
-        #dispatchid
-        #serviceid
+        self.dispatchid = 0
+        self.serviceid = 0
 
     def printRDR(self,request): #打印详单
         response = {}
@@ -107,7 +107,13 @@ class room:
             dateIn = request.POST['date_in']
             dateOut = request.POST['date_out']
             self.isCheckIn = 0
-            del dispatch
+            dispatchid = self.dispatchid
+            if waitlist.__contains__(dispatchid) :
+                del waitlist[dispatchid]
+            else:
+                del servicelist[dispatchid]
+            serviceid = self.serviceid
+            del serviceobjlist[serviceid]
 
             conn = sqlite3.connect(dbpath)
             cursor = conn.cursor()
