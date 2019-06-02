@@ -5,7 +5,7 @@ from . import search
 import sqlite3
 
 
-dbpath = 'db [2]'
+dbpath = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'db.sqlite3')
 
 class myThread(threading.Thread):
     def run(self):
@@ -37,7 +37,7 @@ class myThread(threading.Thread):
                                             from AirCondition_details
                                             where room_id = ?
                         '''
-                        cursor.execute(queryDetailSql,roomid)
+                        cursor.execute(queryDetailSql,(int(roomid),))
                         updateIdList = cursor.fetchone()
                         updateIdStr = "".join(updateIdList)
                         updateId = int(updateIdStr)
@@ -45,7 +45,7 @@ class myThread(threading.Thread):
                                              set end_time = ?, end_temp = ?, fee = ?
                                              where id = ?
                         '''
-                        cursor.execute(updateDetailSql, (t2, search.roomlist[obj.roomid].currentTemp, obj.fee, updateId))
+                        cursor.execute(updateDetailSql, ((t2, search.roomlist[obj.roomid].currentTemp, obj.fee, updateId),))
 
                         cursor.close()
                         conn.commit()

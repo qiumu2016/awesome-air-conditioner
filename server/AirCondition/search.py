@@ -34,6 +34,7 @@ class conditioner:
     def __init__(self):
         self.power_on = 0
         self.start_up = 0
+        self.targetTemp = 0
 
 host = conditioner()
 
@@ -76,24 +77,25 @@ class room:
         self.currentTemp = 27
         self.dispatchid = 0
         self.serviceid = 0
+        self.checkInTime = 0
 
     def printRDR(self,request): #打印详单
         response = {}
         request_post = json.loads(request.body)
         if request_post:
             roomid = request_post['room_id']
-            dateIn = request_post['date_in']
-            dateOut = request_post['date_out']
+            #dateIn = request_post['date_in']
+            #dateOut = request_post['date_out']
 
             conn = sqlite3.connect(dbpath)
             cursor = conn.cursor()
             queryDetailSql = '''select room_id, start_time, (end_time - start_time), wind, fee_rate, fee
                                 from AirCondition_details
-                                where room_id = ? and start_time >= ? and end_time <= ?
+                                where room_id = ?
             '''
-            cursor.execute(queryDetailSql, (roomid, dateIn, dateOut))
-            values = cursor.fetchall()
-            valuesStr = "".join(values)
+            cursor.execute(queryDetailSql, (int(roomid),))
+            values = cursor.fetchone()
+            valuesStr = str(values)
             cursor.close()
             conn.close()
 
@@ -111,8 +113,8 @@ class room:
         request_post = json.loads(request.body)
         if request_post:
             roomid = request_post['room_id']
-            dateIn = request_post['date_in']
-            dateOut = request_post['date_out']
+            #dateIn = request_post['date_in']
+            #dateOut = request_post['date_out']
             self.isCheckIn = 0
             dispatchid = self.dispatchid
             if waitlist.__contains__(dispatchid) :
@@ -126,9 +128,9 @@ class room:
             cursor = conn.cursor()
             queryDetailSql = '''select sum(fee)
                                 from AirCondition_details
-                                where room_id = ? and start_time >= ? and end_time <= ?
+                                where room_id = ?
             '''
-            cursor.execute(queryDetailSql, (roomid, dateIn, dateOut))
+            cursor.execute(queryDetailSql, (int(roomid),))
             values = cursor.fetchone()
             valuesStr = "".join(values)
             cursor.close()
@@ -226,7 +228,7 @@ def changeTargetTemp(request): #顾客更改空调目标温度
                              set schedule = schedule + 1, change_temp = change_temp + 1
                              where room_id = ?
         '''
-        cursorR.execute(updateReportSql, roomid)
+        cursorR.execute(updateReportSql, (int(roomid),))
         cursorR.close()
         connR.commit()
         connR.close()
@@ -254,9 +256,9 @@ def changeFanSpeed(request): #顾客更改空调风速
 
                 obj = waitlist[roomlist[roomid].dispatchid]
 
-            detailCheckInTime = roomlist[roomid].chekcInTime
+            detailCheckInTime = roomlist[roomid].checkInTime
             detailModel = obj.mode
-            detailCurrentTemp = roomlist[roomid].temp
+            detailCurrentTemp = roomlist[roomid].currentTemp
             detailWind = obj.wind
             detailFeeRate = obj.fee_rate
             detailFee = obj.fee
@@ -266,21 +268,21 @@ def changeFanSpeed(request): #顾客更改空调风速
                                  from AirCondition_details
                                  where room_id = ?
             '''
-            cursor.execute(queryDetailSql1, roomid)
+            cursor.execute(queryDetailSql1, (int(roomid),))
             updateId = cursor.fetchone()
             if (updateId != None):
                 updateDetailSql1 = '''update AirCondition_details
                                       set end_time = ?, end_temp = ?, fee = ?
                                       where id = ?
                 '''
-                cursor.execute(updateDetailSql1, (datetime.datetime.now(), detailCurrentTemp, detailFee))
+                cursor.execute(updateDetailSql1, (datetime.datetime.now(), detailCurrentTemp, detailFee, int(roomid)))
 
             addDetailSql1 = '''insert into AirCondition_details
                                (check_in_time, room_id, model, operation, start_time, end_time, start_temp, end_temp, wind, fee_rate, fee)
                                values
                                (?, ?, ?, '0', ?, 0, ?, 0 ,?, ?, 0)
             '''
-            cursor.execute(addDetailSql1, (detailCheckInTimecheckInTime, roomid, detailModel, datetime.datetime.now(),detailCurrentTempTemp, detailWind, detailFeeRate))
+            cursor.execute(addDetailSql1, (detailCheckInTime, int(roomid), detailModel, datetime.datetime.now(),detailCurrentTemp, detailWind, detailFeeRate))
             t1 = roomlist[roomid].checkInTime
             s1 = t1.strftime("%Y%m%d%H%M%S")
             i1 = int(s1)
@@ -298,7 +300,7 @@ def changeFanSpeed(request): #顾客更改空调风速
                                  set time = time + ?, fee = fee + ? ,schedule = schedule + 1, change_wind = change_wind + 1
                                  where room_id = ?
             '''
-            cursorR.execute(updateReportSql, ((i2 - i1) / 60, detailFee, roomid))
+            cursorR.execute(updateReportSql, ((i2 - i1) / 60, detailFee, int(roomid)))
             cursorR.close()
             connR.commit()
             connR.close()
@@ -381,7 +383,8 @@ def requestOn(request): #顾客请求开机
                             from AirCondition_report
                             where room_id = ?
         '''
-        cursorR.execute(queryReportSql, roomid)
+        roomidInt = int(roomid)
+        cursorR.execute(queryReportSql, (roomidInt,))
         idR = cursorR.fetchone()
         if (idR == None):
             addReportSql = '''insert into AirCondition_report
@@ -389,13 +392,14 @@ def requestOn(request): #顾客请求开机
                               values 
                               (?, 1, 0, 0, 1, 0, 0)
             '''
-            cursorR.execute(addReportSql, roomid)
+            cursorR.execute(addReportSql, (roomidInt,))
         else:
             updateReportSql = '''update AirCondition_report
                                  set switch = switch + 1
                                  where id = ?
             '''
-            cursorR.execute(updateReportSql, idR)
+            idR = str(idR)[1:-2]
+            cursorR.execute(updateReportSql, (int(idR),))
         cursorR.close()
         connR.commit()
         connR.close()
@@ -416,12 +420,12 @@ def requestOff(request): #顾客关机
         dispatchid = roomlist[roomid].dispatchid
 
         if roomlist[roomid].isServing == 1:
-            servicelist[roomlist[roomid].dispatchid].wind = fan
-            servicelist[roomlist[roomid].dispatchid].fee_rate = feecalc(fan)
+            #servicelist[roomlist[roomid].dispatchid].wind = fan
+            #servicelist[roomlist[roomid].dispatchid].fee_rate = feecalc(fan)
             obj = servicelist[roomlist[roomid].dispatchid]
         else:
-            waitlist[roomlist[roomid].dispatchid].wind = fan
-            waitlist[roomlist[roomid].dispatchid].fee_rate = feecalc(fan)
+            #waitlist[roomlist[roomid].dispatchid].wind = fan
+            #waitlist[roomlist[roomid].dispatchid].fee_rate = feecalc(fan)
             obj = waitlist[roomlist[roomid].dispatchid]
 
         detailCurrentTemp = roomlist[roomid].currentTemp
@@ -447,7 +451,7 @@ def requestOff(request): #顾客关机
                              from AirCondition_details
                              where room_id = ?
         '''
-        cursor.execute(queryDetailSql1, roomid)
+        cursor.execute(queryDetailSql1, (int(roomid),))
         updateId = cursor.fetchone()
         t1 = roomlist[roomid].checkInTime
         s1 = t1.strftime("%Y%m%d%H%M%S")
@@ -459,7 +463,7 @@ def requestOff(request): #顾客关机
                              set end_time = ?, end_temp = ?,fee = ?
                              where id = ?
         '''
-        cursor.execute(updateDetailSql, (t2, detailCurrentTemp, detailFee, updateId))
+        cursor.execute(updateDetailSql, ((t2, detailCurrentTemp, detailFee, updateId),))
         cursor.close()
         conn.commit()
         conn.close()
@@ -470,7 +474,7 @@ def requestOff(request): #顾客关机
                              set time = time + ? , fee = fee + ?
                              where room_id = ?
         '''
-        cursorR.execute(updateReportSql, ((i2 - i1) / 60, detailFee, roomid))
+        cursorR.execute(updateReportSql, (((i2 - i1) / 60, detailFee, int(roomid)),))
         cursorR.close()
         connR.commit()
         connR.close()
@@ -515,7 +519,7 @@ def printReport(request): #打印报表
                             from AirCondition_report
                             where room_id = ?
         '''
-        cursorR.execute(queryReportSql,roomid)
+        cursorR.execute(queryReportSql,(int(roomid),))
         values = cursorR.fetchall()
         valuesStr = "".join(values)
         cursorR.close()
