@@ -4,10 +4,10 @@ import time
 import datetime
 import sqlite3
 import string
-
+import os
 import json
 
-dbpath = 'db [2]'
+dbpath = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'db.sqlite3')
 
 def cmpwind(s1,s2): # 0是小于，1是等于，2是大于
     if s1 == s2 :
