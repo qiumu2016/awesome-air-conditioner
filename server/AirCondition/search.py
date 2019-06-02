@@ -89,10 +89,11 @@ class room:
             '''
             cursor.execute(queryDetailSql, (roomid, dateIn, dateOut))
             values = cursor.fetchall()
+            valuesStr = "".join(values)
 
             mode = 'RDR_{}'
             with open(mode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
-                f.write(values)
+                f.write(valuesStr)
 
             response['state'] = 'ok'
         else:
@@ -114,10 +115,11 @@ class room:
             '''
             cursor.execute(queryDetailSql, (roomid, dateIn, dateOut))
             values = cursor.fetchone()
+            valuesStr = "".join(values)
 
             mode = 'Invoice_{}'
             with open(mode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
-                f.write(roomid, values)
+                f.write(valuesStr)
 
             response['state'] = 'ok'
         else:
@@ -492,10 +494,11 @@ def printReport(request): #打印报表
         '''
         cursorR.execute(queryReportSql,roomid)
         values = cursorR.fetchall()
+        valuesStr = "".join(values)
 
         mode = 'Report_{}'
         with open(mode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
-            f.write(values)
+            f.write(valuesStr)
 
         response['state'] = 'ok'
     else:
