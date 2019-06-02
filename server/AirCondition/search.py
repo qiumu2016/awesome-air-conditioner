@@ -260,8 +260,8 @@ def changeFanSpeed(request): #顾客更改空调风速
             updateId = cursor.fetchone()
             if (updateId != None):
                 updateDetailSql1 = '''update AirCondition_details
-                                     set end_time = ?, end_temp = ?, fee = ?
-                                     where id = ?
+                                      set end_time = ?, end_temp = ?, fee = ?
+                                      where id = ?
                 '''
                 cursor.execute(updateDetailSql1, (datetime.datetime.now(), detailCurrentTemp, detailFee))
 
@@ -276,7 +276,7 @@ def changeFanSpeed(request): #顾客更改空调风速
                                  where room_id = ?
             '''
             cursor.execute(queryDetailSql2, roomid)
-            t1 = cursor.fetchone()
+            t1 = roomlist[roomid].checkInTime
             s1 = t1.strftime("%Y%m%d%H%M%S")
             i1 = int(s1)
             s2 = t2.strftime("%Y%m%d%H%M%S")
