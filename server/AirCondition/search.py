@@ -97,8 +97,8 @@ class room:
             cursor.close()
             conn.close()
 
-            mode = 'RDR_{}'
-            with open(mode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
+            printMode = 'RDR_{}'
+            with open(printMode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
                 f.write(valuesStr)
 
             response['state'] = 'ok'
@@ -134,8 +134,8 @@ class room:
             cursor.close()
             conn.close()
 
-            mode = 'Invoice_{}'
-            with open(mode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
+            printMode = 'Invoice_{}'
+            with open(printMmode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
                 f.write(valuesStr)
 
             response['state'] = 'ok'
@@ -369,8 +369,8 @@ def requestOn(request): #顾客请求开机
                 waitlist[obj.id] = obj
                 obj.waitclock = time.time()
                 obj.waittime = -1
-        response['modele'] = roomlist[roomid].mode
-        response['target_temp'] =  roomlist[roomid].targetTemp
+        response['modele'] = obj.mode
+        response['target_temp'] =  obj.target_temp
         response['temp_high_limit'] = host.tempHighLimit
         response['temp_low_limit'] = host.tempLowLimit
         response['state'] = 'ok'
@@ -521,8 +521,8 @@ def printReport(request): #打印报表
         cursorR.close()
         connR.close()
 
-        mode = 'Report_{}'
-        with open(mode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
+        printMode = 'Report_{}'
+        with open(printMode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
             f.write(valuesStr)
 
         response['state'] = 'ok'
