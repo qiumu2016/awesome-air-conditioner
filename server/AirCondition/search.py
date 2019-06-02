@@ -299,13 +299,15 @@ def changeFanSpeed(request): #顾客更改空调风速
 
 def requestOn(request): #顾客请求开机
     response = {}
-    t1 = datetime.datetime.now()
+    
     if request.POST:
         roomid = request.POST['room_id']
         obj = dispatch(roomid,'low',27,0.25,'cold') #调度
         if not roomlist.__contains__(roomid):
             roomlist[roomid] = room(roomid)
-        roomlist[roomid].isCheckIn = 1
+        if roomlist[roomid].isCheckIn == 0:
+            roomlist[roomid].isCheckIn = 1
+            t1 = datetime.datetime.now()
         roomlist[roomid].isOpen = 1
         roomlist[roomid].currentTemp = request.POST['current_room_temp']
         roomlist
