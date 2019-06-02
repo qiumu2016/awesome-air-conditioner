@@ -77,7 +77,10 @@ import userHeader from '@/components/userheader.vue'
           this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: this.url+'/manager/print_report',
+              url: this.url+'/manager/print_report/',
+               withCredentials: true,
+              crossDomain:true,
+              changeOrigin: true,
               data : sent
             })
             .then((response) => {    

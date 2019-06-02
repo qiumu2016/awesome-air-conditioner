@@ -8,8 +8,9 @@ import VCharts from 'v-charts'
 import './assets/styles/iconfont.css'
 
 Vue.config.productionTip = false
-Axios.defaults.withCredentials = true;
+
 Vue.prototype.$ajax = Axios
+Axios.defaults.withCredentials = true;
 Vue.use(VCharts)
 new Vue({
   el: '#app',

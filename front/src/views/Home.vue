@@ -123,7 +123,7 @@
     methods:{
       init(){
         if(sessionStorage.getItem("url") !='null'){
-          this.form.url = sessionStorage.getItem("url")
+          this.form.url = sessionStorage.getItem("url").slice(7)
         }
       },
       set_para(formName){

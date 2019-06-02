@@ -1,10 +1,11 @@
 {
   "ExpandedNodes": [
     "",
+    "\\doc",
     "\\server",
     "\\server\\AirCondition",
     "\\server\\server"
   ],
-  "SelectedNode": "\\server\\AirCondition\\models.py",
+  "SelectedNode": "\\server\\AirCondition\\views.py",
   "PreviewInSolutionExplorer": false
 }

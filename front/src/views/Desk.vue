@@ -99,7 +99,10 @@ import userHeader from '@/components/userheader.vue'
             this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: this.url+'/desk/print_rdr',
+              url: this.url+'/desk/print_rdr/',
+               withCredentials: true,
+              crossDomain:true,
+              changeOrigin: true,
               data : sent
             })
             .then((response) => {    
@@ -126,7 +129,10 @@ import userHeader from '@/components/userheader.vue'
             this.$ajax({
               type: 'HEAD',
               method: 'post',
-              url: this.url+'/desk/print_invoice',
+              url: this.url+'/desk/print_invoice/',
+               withCredentials: true,
+              crossDomain:true,
+              changeOrigin: true,
               data : sent
             })
             .then((response) => {    

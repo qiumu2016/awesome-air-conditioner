@@ -325,7 +325,7 @@ def requestOn(request): #顾客请求开机
     response = {}
     if request.POST:
         roomid = request.POST['room_id']
-        obj = dispatch(roomid,'low',27,0.25,'cold') #调度
+        obj = dispatch(roomid,'mid',27,0.5,'cold') #调度
         if not roomlist.__contains__(roomid):
             roomlist[roomid] = room(roomid)
         if roomlist[roomid].isCheckIn == 0:
@@ -356,7 +356,7 @@ def requestOn(request): #顾客请求开机
                     elif cmpwind(target.wind , i.wind) == 1 :
                         if target.clock > i.clock :
                             target = i
-            if cmpwind('low' , target.wind) == 0: #从队中挤出一个
+            if cmpwind('mid' , target.wind) == 0: #从队中挤出一个
                 del serviceobjlist[target.id]
                 obj2 = servicelist[target.dispatchid]
                 del servicelist[obj2]
@@ -371,7 +371,7 @@ def requestOn(request): #顾客请求开机
                 roomlist[roomid].isServing = 1
                 serviceobject.status = 1
                 serviceobjlist[serviceobject.id] = serviceobject
-            elif cmpwind('low' , target.wind) == 1: #进入等待队列
+            elif cmpwind('mid' , target.wind) == 1: #进入等待队列
                 waitlist[obj.id] = obj
                 obj.waitclock = time.time()
                 obj.waittime = 2
