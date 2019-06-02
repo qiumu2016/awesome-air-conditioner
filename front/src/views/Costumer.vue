@@ -98,7 +98,7 @@ var changeT
        set_temp:24,
        model:'制冷',
        cur_temp:'',
-       set_wind:'弱风',
+       set_wind:'中风',
        wind:'low',
        cur_wind:'',
        ispower:'未开机',

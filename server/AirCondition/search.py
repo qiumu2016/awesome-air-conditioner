@@ -304,7 +304,7 @@ def requestOn(request): #顾客请求开机
     response = {}
     if request.POST:
         roomid = request.POST['room_id']
-        obj = dispatch(roomid,'mid',27,0.5,'cold') #调度
+        obj = dispatch(roomid,'mid',host.targetTemp,0.5,'cold') #调度
         if not roomlist.__contains__(roomid):
             roomlist[roomid] = room(roomid)
         if roomlist[roomid].isCheckIn == 0:
