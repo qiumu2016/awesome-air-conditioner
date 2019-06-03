@@ -232,7 +232,7 @@ def changeFanSpeed(request): #顾客更改空调风速
             t2 = datetime.datetime.now()
             updateId = cursor.fetchone()
             updateIdStr = str(updateId)
-            if (updateIdStr != '[]'):
+            if (updateIdStr != '(None,)'):
                 print(updateIdStr)
                 updateIdStr = updateIdStr[1:-2]
                 updateDetailSql1 = '''update AirCondition_details
@@ -287,11 +287,32 @@ def requestOn(request): #顾客请求开机
         if roomlist[roomid].isCheckIn == 0:
             roomlist[roomid].isCheckIn = 1
             roomlist[roomid].checkInTime = datetime.datetime.now()
+        t = roomlist[roomid].checkInTime
         roomlist[roomid].isOpen = 1
         roomlist[roomid].currentTemp = float(request_post['current_room_temp'])
         if len(servicelist)<host.numServe: #直接进入服务
             servicelist[roomid] = roomid
             roomlist[roomid].isServing = 1
+            roomlist[roomid].dispatchfee = 0.0
+
+            detailCheckInTime = roomlist[roomid].checkInTime
+            detailModel = host.mode
+            detailCurrentTemp = roomlist[roomid].currentTemp
+            detailWind = roomlist[roomid].wind
+            detailFeeRate = roomlist[roomid].fee_rate
+            detailFee = roomlist[roomid].dispatchfee
+            conn = sqlite3.connect(dbpath)
+            cursor = conn.cursor()
+
+            addDetailSql = '''insert into AirCondition_details
+                              (check_in_time, room_id, model, operation, start_time, end_time, start_temp, end_temp, wind, fee_rate, fee)
+                              values 
+                              (?, ?, ?, '0', ?, 0, ?, 0 ,?, ?, 0)
+            '''
+            cursor.execute(addDetailSql, (detailCheckInTime, int(roomid), detailModel, t, detailCurrentTemp, detailWind, detailFeeRate))
+            cursor.close()
+            conn.commit()
+            conn.close()
         else:
             flag = True
             target = '0'
@@ -313,6 +334,43 @@ def requestOn(request): #顾客请求开机
                 roomlist[target].isServing = 0
                 servicelist[roomid] = roomid
                 roomlist[roomid].isServing = 1
+
+                detailCurrentTemp = roomlist[target].currentTemp
+                detailFee = roomlist[target].dispatchfee
+                conn = sqlite3.connect(dbpath)
+                cursor = conn.cursor()
+                queryDetailSql = '''select MAX(id)
+                                    from AirCondition_details
+                                    where room_id = ?
+                '''
+                cursor.execute(queryDetailSql, (int(target),))
+                updateIdList = cursor.fetchone()
+                updateIdStr = str(updateIdList)[1:-2]
+                updateId = int(updateIdStr)
+                updateDetailSql = '''update AirCondition_details
+                                     set end_time = ?, end_temp = ?, fee = ?
+                                     where id = ?
+                '''
+                cursor.execute(updateDetailSql, (t, detailCurrentTemp, detailFee, updateId,))
+                roomlist[target].dispatchfee = 0.0
+
+                detailCheckInTime = roomlist[roomid].checkInTime
+                detailModel = host.mode
+                detailCurrentTemp = roomlist[roomid].currentTemp
+                detailWind = roomlist[roomid].wind
+                detailFeeRate = roomlist[roomid].fee_rate
+
+                addDetailSql = '''insert into AirCondition_details
+                                  (check_in_time, room_id, model, operation, start_time, end_time, start_temp, end_temp, wind, fee_rate, fee)
+                                  values 
+                                  (?, ?, ?, '0', ?, 0, ?, 0 ,?, ?, 0)
+                '''
+                cursor.execute(addDetailSql, (detailCheckInTime, int(roomid), detailModel, t, detailCurrentTemp, detailWind, detailFeeRate))
+                cursor.close()
+                conn.commit()
+                conn.close()
+                roomlist[roomid].dispatchfee = 0.0
+
             elif cmpwind('mid' , roomlist[target].wind) == 1: #进入等待队列
                 waitlist[roomid] = roomid
                 roomlist[roomid].waitclock = time.time()
