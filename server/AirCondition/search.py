@@ -479,12 +479,16 @@ def requestInfo(request): #每分钟查看一次费用
                 obj = 0
                 if servicelist.__contains__(roomlist[str(roomid)].dispatchid) :
                     obj = servicelist[roomlist[str(roomid)].dispatchid]
-                else:
+                    response['wind'] = obj.wind
+                    response['current_temp'] = roomlist[str(roomid)].currentTemp
+                    response['fee_rate'] = obj.fee_rate
+                    response['fee'] = roomlist[str(roomid)].fee
+                elif waitlist.__contains__(roomlist[str(roomid)].dispatchid) :
                     obj = waitlist[roomlist[str(roomid)].dispatchid]
-                response['wind'] = obj.wind
-                response['current_temp'] = roomlist[str(roomid)].currentTemp
-                response['fee_rate'] = obj.fee_rate
-                response['fee'] = roomlist[str(roomid)].fee
+                    response['wind'] = obj.wind
+                    response['current_temp'] = roomlist[str(roomid)].currentTemp
+                    response['fee_rate'] = obj.fee_rate
+                    response['fee'] = roomlist[str(roomid)].fee
                 response['state'] = 'ok'
         else:
             response['state'] = 'fail'
