@@ -82,6 +82,7 @@ class room:
         self.dispatchid = 0
         self.serviceid = 0
         self.checkInTime = 0
+        self.fee = 0
 
     def printRDR(self,request): #打印详单
         #response = {}
@@ -218,7 +219,6 @@ def changeTargetTemp(request): #顾客更改空调目标温度
 
 def changeFanSpeed(request): #顾客更改空调风速
     response = {}
-    t2 = datetime.datetime.now()
     request_post = json.loads(request.body)
     if request_post:
         roomid = request_post['room_id']
@@ -249,6 +249,7 @@ def changeFanSpeed(request): #顾客更改空调风速
                                  where room_id = ?
             '''
             cursor.execute(queryDetailSql1, (int(roomid),))
+            t2 = datetime.datetime.now()
             updateId = cursor.fetchone()
             updateIdStr = str(updateId)[1:-2]
             if (updateId != None):
@@ -256,7 +257,7 @@ def changeFanSpeed(request): #顾客更改空调风速
                                       set end_time = ?, end_temp = ?, fee = ?
                                       where id = ?
                 '''
-                cursor.execute(updateDetailSql1, (datetime.datetime.now(), detailCurrentTemp, detailFee, int(updateIdStr)))
+                cursor.execute(updateDetailSql1, (t2, detailCurrentTemp, detailFee, int(updateIdStr)))
 
             addDetailSql1 = '''insert into AirCondition_details
                                (check_in_time, room_id, model, operation, start_time, end_time, start_temp, end_temp, wind, fee_rate, fee)
@@ -486,7 +487,7 @@ def requestInfo(request): #每分钟查看一次费用
                 response['wind'] = obj.wind
                 response['current_temp'] = roomlist[roomid].currentTemp
                 response['fee_rate'] = obj.fee_rate
-                response['fee'] = obj.fee
+                response['fee'] = roomlist[roomid].fee
                 response['state'] = 'ok'
         else:
             response['state'] = 'fail'
@@ -550,6 +551,7 @@ def printInvoice(request): #打印账单
         print(roomlist)
         roomid = request_post['room_id']
         roomlist[str(roomid)].isCheckIn = 0
+        roomlist[str(roomid)].fee = 0
         dispatchid = roomlist[str(roomid)].dispatchid
         if waitlist.__contains__(dispatchid) :
             del waitlist[dispatchid]
