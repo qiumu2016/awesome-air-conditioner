@@ -99,7 +99,7 @@ class room:
         #waittime
         #waitclock
 
-    def printRDR(self,request): #打印详单
+    def printRDR(request): #打印详单
         #response = {}
         request_post = json.loads(request.body)
         if request_post:
@@ -229,7 +229,7 @@ def changeFanSpeed(request): #顾客更改空调风速
             t2 = datetime.datetime.now()
             updateId = cursor.fetchone()
             updateIdStr = str(updateId)[1:-2]
-            if (updateId != None):
+            if (updateIdstr != ''):
                 updateDetailSql1 = '''update AirCondition_details
                                       set end_time = ?, end_temp = ?, fee = ?
                                       where id = ?
@@ -567,11 +567,11 @@ def roomUpdate():
                 conn.close()
 
                 roomlist[j].dispatchfee = 0.0
-                del servicelist[j]
+                del servicelist[int(j)]
 
-    for i in waitlist.values() : #等待队列的等待时间减一
-        roomlist[i].waittime -= 1
-        if roomlist[i].waittime == 0: #已经到时，强行入队
+    for i in waitlist : #等待队列的等待时间减一
+        roomlist[str(i)].waittime -= 1
+        if roomlist[str(i)].waittime == 0: #已经到时，强行入队
             flag = True 
             target = 0
             for j in servicelist.values() :
@@ -579,20 +579,20 @@ def roomUpdate():
                     flag = False
                     target = j
                 else:
-                    if roomlist[target].service.clock > roomlist[j].service.clock :
+                    if roomlist[str(target)].service.clock > roomlist[str(j)].service.clock :
                         target = j
             del servicelist[target]
             waitlist[target] = target
-            roomlist[target].waitclock = time.time()
-            roomlist[target].waittime = 120
-            roomlist[target].isServing = 0
-            del waitlist[i]
-            servicelist[i] = i
+            roomlist[str(target)].waitclock = time.time()
+            roomlist[str(target)].waittime = 120
+            roomlist[str(target)].isServing = 0
+            del waitlist[int(i)]
+            servicelist[int(i)] = int(i)
             roomlist[i].isServing = 1
 
             t2 = datetime.datetime.now()
-            detailCurrentTemp1 = roomlist[target].currentTemp
-            detailFee1 = roomlist[target].dispatchfee
+            detailCurrentTemp1 = roomlist[str(target)].currentTemp
+            detailFee1 = roomlist[str(target)].dispatchfee
 
             conn = sqlite3.connect(dbpath)
             cursor = conn.cursor()
@@ -636,20 +636,20 @@ def roomUpdate():
                 flag = False
                 target = i
             else:
-                if roomlist[i].waitclock < roomlist[target].waitclock:
+                if roomlist[str(i)].waitclock < roomlist[str(target)].waitclock:
                     target = i
-        roomlist[target].isServing = 1
+        roomlist[str(target)].isServing = 1
         del waitlist[target]
         servicelist[target] = target
 
         conn = sqlite3.connect(dbpath)
         cursor = conn.cursor()
-        detailCheckInTime = roomlist[target].checkInTime
-        detailModel = roomlist[target].mode
+        detailCheckInTime = roomlist[str(target)].checkInTime
+        detailModel = roomlist[str(target)].mode
         detailStartTime = datetime.datetime.now()
-        detailStartTemp = roomlist[target].currentTemp
-        detailWind = roomlist[target].wind
-        detailFeeRate = roomlist[target].fee_rate
+        detailStartTemp = roomlist[str(target)].currentTemp
+        detailWind = roomlist[str(target)].wind
+        detailFeeRate = roomlist[str(target)].fee_rate
         addDetailSql = '''insert into AirCondition_details
                           (check_in_time, room_id, model, operation, start_time, end_time, start_temp, end_temp, wind, fee_rate, fee)
                           values
@@ -657,7 +657,7 @@ def roomUpdate():
         '''
         cursor.execute(addDetailSql, (detailCheckInTime, int(target), detailModel, detailStartTime, detailStartTemp, detailWind, detailFeeRate,))
 
-        roomlist[target].dispatchfee = 0.0
+        roomlist[str(target)].dispatchfee = 0.0
         cursor.close()
         conn.commit()
         conn.close()
