@@ -467,6 +467,7 @@ def requestOff(request): #顾客关机
     return JsonResponse(response)
 
 def requestInfo(request): #每分钟查看一次费用
+    threadLock.acquire()
     response = {}
     request_post = json.loads(request.body)
     if request_post:
@@ -496,6 +497,7 @@ def requestInfo(request): #每分钟查看一次费用
             response['state'] = 'fail'
     else:
         response['state'] = 'fail'
+    threadLock.release()
     return JsonResponse(response)
 
 def printReport(request): #打印报表
