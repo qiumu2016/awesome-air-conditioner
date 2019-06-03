@@ -531,12 +531,11 @@ def printInvoice(request): #打印账单
         conn.close()
 
         printMode = 'Invoice_{}'
-        with open(printMmode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
+        with open(printMode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
             f.write(valuesStr)
 
         response['state'] = 'ok'
 
-        self.isCheckIn = 0
     else:
         response['state'] = 'fail'
     return JsonResponse(response)
