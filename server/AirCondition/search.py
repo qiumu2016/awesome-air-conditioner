@@ -81,8 +81,6 @@ def feecalc(s): #根据风速求费率
     else:
         return host.feeRateH
 
-
-
 class room:
     def __init__(self,roomid):
         self.roomid = roomid
