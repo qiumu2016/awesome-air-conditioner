@@ -675,6 +675,8 @@ def _update():
         serviceobjlist[serviceobject.id] = serviceobject
         del waitlist[obj]
         servicelist[obj.id] = obj
+    timer = threading.Timer(1.0,_update)
+    timer.start()
 
 def startUp():
     response = {}
