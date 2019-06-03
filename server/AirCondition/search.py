@@ -454,6 +454,7 @@ def requestOff(request): #顾客关机
         '''
         cursor.execute(queryDetailSql1, (int(roomid),))
         updateId = cursor.fetchone()
+        updateIdStr = str(updateId)[1:-2]
         t1 = roomlist[roomid].checkInTime
         s1 = t1.strftime("%Y%m%d%H%M%S")
         i1 = int(s1)
@@ -464,7 +465,7 @@ def requestOff(request): #顾客关机
                              set end_time = ?, end_temp = ?,fee = ?
                              where id = ?
         '''
-        cursor.execute(updateDetailSql, ((t2, detailCurrentTemp, detailFee, updateId),))
+        cursor.execute(updateDetailSql, (t2, detailCurrentTemp, detailFee, int(updateIdStr),))
         cursor.close()
         conn.commit()
         conn.close()
@@ -475,7 +476,7 @@ def requestOff(request): #顾客关机
                              set time = time + ? , fee = fee + ?
                              where room_id = ?
         '''
-        cursorR.execute(updateReportSql, (((i2 - i1) / 60, detailFee, int(roomid)),))
+        cursorR.execute(updateReportSql, ((i2 - i1) / 60, detailFee, int(roomid),))
         cursorR.close()
         connR.commit()
         connR.close()
