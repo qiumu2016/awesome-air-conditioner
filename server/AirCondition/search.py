@@ -592,6 +592,7 @@ def printInvoice(request): #打印账单
     #return JsonResponse(response)
 
 def _update():
+    threading.Lock().acquire()
     for j in serviceobjlist.values():#正在空调服务的房间空调变化
         obj = servicelist[j.dispatchid]
         temp = obj.fee_rate / 60.0
@@ -679,6 +680,7 @@ def _update():
         serviceobjlist[serviceobject.id] = serviceobject
         del waitlist[obj]
         servicelist[obj.id] = obj
+    threading.Lock().release()
     timer = threading.Timer(1.0,_update)
     timer.start()
 
