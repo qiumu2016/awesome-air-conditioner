@@ -493,16 +493,19 @@ def requestInfo(request): #每分钟查看一次费用
             response['isCheckIn'] = roomlist[roomid].isCheckIn
             response['isOpen'] = roomlist[roomid].isOpen
             response['isServing'] = roomlist[roomid].isServing
-            obj = 0
-            if servicelist.__contains__(roomlist[roomid].dispatchid) :
-                obj = servicelist[roomlist[roomid].dispatchid]
+            if (roomlist[roomid].isOpen == 0):
+                response['state'] = 'ok'
             else:
-                obj = waitlist[roomlist[roomid].dispatchid]
-            response['wind'] = obj.wind
-            response['current_temp'] = roomlist[roomid].currentTemp
-            response['fee_rate'] = obj.fee_rate
-            response['fee'] = obj.fee
-            response['state'] = 'ok'
+                obj = 0
+                if servicelist.__contains__(roomlist[roomid].dispatchid) :
+                    obj = servicelist[roomlist[roomid].dispatchid]
+                else:
+                    obj = waitlist[roomlist[roomid].dispatchid]
+                response['wind'] = obj.wind
+                response['current_temp'] = roomlist[roomid].currentTemp
+                response['fee_rate'] = obj.fee_rate
+                response['fee'] = obj.fee
+                response['state'] = 'ok'
         else:
             response['state'] = 'fail'
     else:
