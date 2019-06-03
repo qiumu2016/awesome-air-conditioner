@@ -10,20 +10,17 @@ dbpath = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.ab
 class myThread(threading.Thread):
     def run(self):
         while 1:
-            time.sleep(60)
+            time.sleep(1)
             for i in search.servicelist.values(): #正在空调服务的房间空调变化
                 for j in search.serviceobjlist.values():
                     obj = search.servicelist[j.dispatchid]
-                    obj.feeprogress += 1
-                    temp = 1
+                    temp = obj.fee_rate / 60.0
                     if obj.mode == 'cold' :
-                        temp = -1
-                    if (obj.wind == 'high') or (obj.wind == 'mid' and obj.feeprogress == 2) or (obj.wind == 'low' and obj.feeprogress == 3):
-                        search.roomlist[obj.roomid].currentTemp += temp
-                        temp = 0
-                        obj.fee += 1
-                    if search.roomlist[obj.roomid].currentTemp == obj.target_temp : #服务结束
+                        temp = -temp
+                    search.roomlist[obj.roomid].currentTemp += temp
+                    if (obj.mode == 'hot' and search.roomlist[obj.roomid].currentTemp >= obj.target_temp) or (obj.mode == 'cold' and search.roomlist[obj.roomid].currentTemp <= obj.target_temp) : #服务结束
                         roomid = obj.roomid
+                        search.roomlist[roomid].currentTemp = obj.target_temp
                         search.roomlist[roomid].isServing = 0
                         serviceid = search.roomlist[roomid].serviceid
                         del search.servicelist[obj.id]

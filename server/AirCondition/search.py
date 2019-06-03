@@ -23,19 +23,14 @@ def cmpwind(s1,s2): # 0是小于，1是等于，2是大于
     else :
         return 2
 
-def feecalc(s): #根据风速求费率
-    if s == 'low' :
-        return 0.3
-    elif s == 'mid' :
-        return 0.5
-    else:
-        return 1
-
 class conditioner:
     def __init__(self):
         self.power_on = 0
         self.start_up = 0
         self.targetTemp = 0
+        self.feeRateH = 0
+        self.feeRateL = 0
+        self.feeRateM = 0
 
 host = conditioner()
 
@@ -62,6 +57,14 @@ def setPara(request):
     else:
         response['state'] = 'fail'
     return JsonResponse(response)
+
+def feecalc(s): #根据风速求费率
+    if s == 'low' :
+        return host.feeRateL
+    elif s == 'mid' :
+        return host.feeRateM
+    else:
+        return host.feeRateH
 
 def startUp():
     response = {}
@@ -138,7 +141,6 @@ class dispatch:
         self.fee_rate = fee_rate
         self.fee = 0
         self.mode = mode
-        self.feeprogress = 0
         #waittime
         #waitclock
         #serviceid
@@ -296,7 +298,7 @@ def requestOn(request): #顾客请求开机
     request_post = json.loads(request.body)
     if request_post:
         roomid = request_post['room_id']
-        obj = dispatch(roomid,'mid',host.targetTemp,0.5,'cold') #调度
+        obj = dispatch(roomid,'mid',host.targetTemp,feecalc('mid'),'cold') #调度
         if not roomlist.__contains__(roomid):
             roomlist[roomid] = room(roomid)
         if roomlist[roomid].isCheckIn == 0:
