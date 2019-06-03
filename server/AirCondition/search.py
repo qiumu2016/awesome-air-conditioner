@@ -34,33 +34,44 @@ class conditioner:
         self.feeRateM = 0
         self.numServe = 0
 
-host = conditioner()
-
-threadLock = threading.Lock()
-
-def powerOn ():
-    response = {}
-    host.power_on = 1
-    response['state'] = 'ok'
-    return JsonResponse(response)
-
-def setPara(request):
-    response = {}
-    request_post = json.loads(request.body)
-    if request_post:
-        host.mode = request_post['model']
-        host.tempHighLimit = request_post['temp_high_limit']
-        host.tempLowLimit = request_post['temp_low_limit']
-        host.targetTemp = request_post['default_target_temp']
-        host.feeRateH = request_post['fee_rate_h']
-        host.feeRateM = request_post['fee_rate_m']
-        host.feeRateL = request_post['fee_rate_l']
-        host.numRooms = request_post['num_rooms']
-        host.numServe = request_post['num_serve']
+    def startUp(self):
+        response = {}
+        self.start_up = 1
+        self.timer = threading.Timer(1.0,self._update)
+        self.timer.start()
         response['state'] = 'ok'
-    else:
-        response['state'] = 'fail'
-    return JsonResponse(response)
+        return JsonResponse(response)
+    
+    def powerOn (self):
+        response = {}
+        self.power_on = 1
+        response['state'] = 'ok'
+        return JsonResponse(response)
+    
+    def setPara(self,request):
+        response = {}
+        request_post = json.loads(request.body)
+        if request_post:
+            self.mode = request_post['model']
+            self.tempHighLimit = request_post['temp_high_limit']
+            self.tempLowLimit = request_post['temp_low_limit']
+            self.targetTemp = request_post['default_target_temp']
+            self.feeRateH = request_post['fee_rate_h']
+            self.feeRateM = request_post['fee_rate_m']
+            self.feeRateL = request_post['fee_rate_l']
+            self.numRooms = request_post['num_rooms']
+            self.numServe = request_post['num_serve']
+            response['state'] = 'ok'
+        else:
+            response['state'] = 'fail'
+        return JsonResponse(response)
+    
+    def _update(self):
+        roomUpdate()
+        self.timer = threading.Timer(1.0,self._update)
+        self.timer.start()
+
+host = conditioner()
 
 def feecalc(s): #根据风速求费率
     if s == 'low' :
@@ -80,9 +91,9 @@ class room:
         self.isServing = 0
         self.currentTemp = 27.0
         self.dispatchid = 0
-        self.serviceid = 0
         self.checkInTime = 0
         self.fee = 0.0
+        self.service = serviceobj(roomid)
 
     def printRDR(self,request): #打印详单
         #response = {}
@@ -144,7 +155,6 @@ class dispatch:
         self.mode = mode
         #waittime
         #waitclock
-        #serviceid
         #feeprogress
 
 servicelist = {} #调度对象的服务队列
@@ -156,11 +166,7 @@ class serviceobj:
         serviceobj.servicecount += 1
         self.id = serviceobj.servicecount
         self.roomid = roomid
-        self.status = 0
         self.clock = time.time() #服务开始时间
-        #dispatchid
-        
-serviceobjlist = {} #服务对象队列
 
 def checkRoomState(request): #查看房间状态
     response = {}
@@ -309,42 +315,29 @@ def requestOn(request): #顾客请求开机
         roomlist[str(roomid)].currentTemp = float(request_post['current_room_temp'])
         if len(servicelist)<host.numServe: #直接进入服务
             servicelist[obj.id] = obj
-            serviceobject = serviceobj(roomid)
-            obj.serviceid = serviceobject.id
-            serviceobject.dispatchid = obj.id
-            roomlist[str(roomid)].serviceid = serviceobject.id
             roomlist[str(roomid)].dispatchid = obj.id
             roomlist[str(roomid)].isServing = 1
-            serviceobject.status = 1
-            serviceobjlist[serviceobject.id] = serviceobject
         else:
             flag = True
             target = 0
-            for i in serviceobjlist.values():
+            for i in servicelist.values():
                 if flag:
                     target = i
                     flag = False
                 else:
-                    if cmpwind(servicelist[target.dispatchid].wind , servicelist[i.dispatchid].wind) == 2 :
+                    if cmpwind(target.wind , i.wind) == 2 :
                         target = i
-                    elif cmpwind(servicelist[target.dispatchid].wind , servicelist[i.dispatchid].wind) == 1 :
-                        if target.clock > i.clock :
+                    elif cmpwind(target.wind , i.wind) == 1 :
+                        if roomlist[target.roomid].service.clock > roomlist[i.roomid].service.clock :
                             target = i
             if cmpwind('mid' , target.wind) == 0: #从队中挤出一个
-                del serviceobjlist[target.id]
-                obj2 = servicelist[target.dispatchid]
-                del servicelist[obj2]
-                waitlist[obj2.id] = obj2
-                obj2.waitclock = time.time()
-                obj2.waittime = 120
+                del servicelist[target.id]
+                waitlist[target.id] = target
+                target.waitclock = time.time()
+                target.waittime = 120
                 roomlist[target.roomid].isServing = 0
                 servicelist[obj.id] = obj
-                serviceobject = serviceobj(roomid) #新建一个服务对象
-                obj.serviceid = serviceobject.id
-                serviceobject.dispatchid = obj.id
-                roomlist[str(roomid)].isServing = 1
-                serviceobject.status = 1
-                serviceobjlist[serviceobject.id] = serviceobject
+                roomlist[obj.roomid].isServing = 1
             elif cmpwind('mid' , target.wind) == 1: #进入等待队列
                 waitlist[obj.id] = obj
                 obj.waitclock = time.time()
@@ -402,13 +395,9 @@ def requestOff(request): #顾客关机
         dispatchid = roomlist[str(roomid)].dispatchid
 
         if roomlist[str(roomid)].isServing == 1:
-            #servicelist[roomlist[str(roomid)].dispatchid].wind = fan
-            #servicelist[roomlist[str(roomid)].dispatchid].fee_rate = feecalc(fan)
-            obj = servicelist[roomlist[str(roomid)].dispatchid]
+            obj = servicelist[dispatchid]
         else:
-            #waitlist[roomlist[str(roomid)].dispatchid].wind = fan
-            #waitlist[roomlist[str(roomid)].dispatchid].fee_rate = feecalc(fan)
-            obj = waitlist[roomlist[str(roomid)].dispatchid]
+            obj = waitlist[dispatchid]
 
         detailCurrentTemp = roomlist[str(roomid)].currentTemp
         detailFee = obj.fee
@@ -421,10 +410,7 @@ def requestOff(request): #顾客关机
         else:
             del waitlist[dispatchid]
         if roomlist[str(roomid)].isServing == 1 :
-            serviceid = roomlist[str(roomid)].serviceid
-            roomlist[str(roomid)].serviceid = 0
             roomlist[str(roomid)].isServing = 0
-            del serviceobjlist[serviceid]
         response['state'] = 'ok'
 
         conn = sqlite3.connect(dbpath)
@@ -467,7 +453,6 @@ def requestOff(request): #顾客关机
     return JsonResponse(response)
 
 def requestInfo(request): #每分钟查看一次费用
-    threadLock.acquire()
     response = {}
     request_post = json.loads(request.body)
     if request_post:
@@ -476,6 +461,7 @@ def requestInfo(request): #每分钟查看一次费用
             response['isCheckIn'] = roomlist[str(roomid)].isCheckIn
             response['isOpen'] = roomlist[str(roomid)].isOpen
             response['isServing'] = roomlist[str(roomid)].isServing
+            response['current_temp'] = roomlist[str(roomid)].currentTemp
             if (roomlist[str(roomid)].isOpen == 0):
                 response['state'] = 'ok'
             else:
@@ -483,13 +469,11 @@ def requestInfo(request): #每分钟查看一次费用
                 if servicelist.__contains__(roomlist[str(roomid)].dispatchid) :
                     obj = servicelist[roomlist[str(roomid)].dispatchid]
                     response['wind'] = obj.wind
-                    response['current_temp'] = roomlist[str(roomid)].currentTemp
                     response['fee_rate'] = obj.fee_rate
                     response['fee'] = roomlist[str(roomid)].fee
                 elif waitlist.__contains__(roomlist[str(roomid)].dispatchid) :
                     obj = waitlist[roomlist[str(roomid)].dispatchid]
                     response['wind'] = obj.wind
-                    response['current_temp'] = roomlist[str(roomid)].currentTemp
                     response['fee_rate'] = obj.fee_rate
                     response['fee'] = roomlist[str(roomid)].fee
                 response['state'] = 'ok'
@@ -497,7 +481,6 @@ def requestInfo(request): #每分钟查看一次费用
             response['state'] = 'fail'
     else:
         response['state'] = 'fail'
-    threadLock.release()
     return JsonResponse(response)
 
 def printReport(request): #打印报表
@@ -561,9 +544,6 @@ def printInvoice(request): #打印账单
             del waitlist[dispatchid]
         elif servicelist.__contains__(dispatchid) :
             del servicelist[dispatchid]
-        serviceid = roomlist[str(roomid)].serviceid
-        if servicelist.__contains__(serviceid) :
-            del serviceobjlist[serviceid]
 
         conn = sqlite3.connect(dbpath)
         cursor = conn.cursor()
@@ -595,76 +575,68 @@ def printInvoice(request): #打印账单
     return response
     #return JsonResponse(response)
 
-def _update():
-    threadLock.acquire()
-    for j in serviceobjlist.values():#正在空调服务的房间空调变化
-        obj = servicelist[j.dispatchid]
-        temp = obj.fee_rate / 60.0
-        obj.fee += temp
-        roomlist[obj.roomid].fee += temp
-        if obj.mode == 'cold' :
-            temp = 0.0 - temp
-        print(roomlist[obj.roomid])
-        roomlist[obj.roomid].currentTemp += temp
-        if (obj.mode == 'hot' and roomlist[obj.roomid].currentTemp >= obj.target_temp) or (obj.mode == 'cold' and roomlist[obj.roomid].currentTemp <= obj.target_temp) : #服务结束
-            roomid = obj.roomid
-            roomlist[roomid].currentTemp = obj.target_temp
-            roomlist[roomid].isOpen = 0
-            roomlist[roomid].isServing = 0
-            serviceid = roomlist[roomid].serviceid
-            del servicelist[obj.id]
-            del serviceobjlist[serviceid]
+def roomUpdate():
+    for j in roomlist.values():#正在空调服务的房间空调变化
+        if j.isServing == 1:
+            obj = servicelist[j.dispatchid]
+            temp = obj.fee_rate / 60.0
+            obj.fee += temp
+            roomlist[obj.roomid].fee += temp
+            if obj.mode == 'cold' :
+                temp = 0.0 - temp
+            print(roomlist[obj.roomid])
+            roomlist[obj.roomid].currentTemp += temp
+            if (obj.mode == 'hot' and roomlist[obj.roomid].currentTemp >= obj.target_temp) or (obj.mode == 'cold' and roomlist[obj.roomid].currentTemp <= obj.target_temp) : #服务结束
+                roomid = obj.roomid
+                roomlist[roomid].currentTemp = obj.target_temp
+                roomlist[roomid].isOpen = 0
+                roomlist[roomid].isServing = 0
+                
+                t2 = datetime.datetime.now()
 
-            t2 = datetime.datetime.now()
+                conn = sqlite3.connect(dbpath)
+                cursor = conn.cursor()
+                queryDetailSql = '''select MAX(id)
+                                    from AirCondition_details
+                                    where room_id = ?
+                '''
+                cursor.execute(queryDetailSql,(int(roomid),))
+                updateIdList = cursor.fetchone()
+                updateIdStr = str(updateIdList)[1:-2]
+                updateId = int(updateIdStr)
+                updateDetailSql = '''update AirCondition_details
+                                        set end_time = ?, end_temp = ?, fee = ?
+                                        where id = ?
+                '''
+                cursor.execute(updateDetailSql, (t2, roomlist[obj.roomid].currentTemp, obj.fee, updateId,))
 
-            conn = sqlite3.connect(dbpath)
-            cursor = conn.cursor()
-            queryDetailSql = '''select MAX(id)
-                                from AirCondition_details
-                                where room_id = ?
-            '''
-            cursor.execute(queryDetailSql,(int(roomid),))
-            updateIdList = cursor.fetchone()
-            updateIdStr = str(updateIdList)[1:-2]
-            updateId = int(updateIdStr)
-            updateDetailSql = '''update AirCondition_details
-                                    set end_time = ?, end_temp = ?, fee = ?
-                                    where id = ?
-            '''
-            cursor.execute(updateDetailSql, (t2, roomlist[obj.roomid].currentTemp, obj.fee, updateId,))
-
-            cursor.close()
-            conn.commit()
-            conn.close()
-
+                cursor.close()
+                conn.commit()
+                conn.close()
+                
+                del servicelist[obj.id]
 
     for i in waitlist.values() : #等待队列的等待时间减一
         i.waittime -= 1
         if i.waittime == 0: #已经到时，强行入队
             flag = True 
             target = 0
-            for j in serviceobjlist.values() :
+            for j in servicelist.values() :
                 if flag :
                     flag = False
                     target = j
                 else:
-                    if target.clock > j.clock :
+                    if roomlist[target.roomid].service.clock > roomlist[j.roomid].service.clock :
                         target = j
-            del serviceobjlist[target.id]
-            obj2 = servicelist[target.dispatchid]
-            del servicelist[obj2]
-            waitlist[obj2.id] = obj2
-            obj2.waitclock = time.time()
-            obj2.waittime = 2
+            del servicelist[target.id]
+            waitlist[target.id] = target
+            target.waitclock = time.time()
+            target.waittime = 120
             roomlist[target.roomid].isServing = 0
             del waitlist[i.id]
             servicelist[i.id] = i
-            serviceobject = serviceobj(i.roomid) #新建一个服务对象
-            i.serviceid = serviceobject.id
-            serviceobject.dispatchid = i.id
             roomlist[i.roomid].isServing = 1
-            serviceobject.status = 1
-            serviceobjlist[serviceobject.id] = serviceobject
+
     while (len(servicelist)<host.numServe) and (len(waitlist) > 0): #服务队列不满，从等待队列里拿
         obj = 0
         flag = True
@@ -676,22 +648,6 @@ def _update():
                 if i.waitclock < obj.waitclock:
                     obj = i
         roomid = obj.roomid
-        serviceobject = serviceobj(roomid) #新建一个服务对象
-        obj.serviceid = serviceobject.id
-        serviceobject.dispatchid = obj.id
         roomlist[roomid].isServing = 1
-        serviceobject.status = 1
-        serviceobjlist[serviceobject.id] = serviceobject
-        del waitlist[obj]
+        del waitlist[obj.id]
         servicelist[obj.id] = obj
-    threadLock.release()
-    timer = threading.Timer(1.0,_update)
-    timer.start()
-
-def startUp():
-    response = {}
-    host.start_up = 1
-    host.timer = threading.Timer(1.0,_update)
-    host.timer.start()
-    response['state'] = 'ok'
-    return JsonResponse(response)
