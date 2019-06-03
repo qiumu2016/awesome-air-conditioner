@@ -232,7 +232,7 @@ def changeFanSpeed(request): #顾客更改空调风速
             t2 = datetime.datetime.now()
             updateId = cursor.fetchone()
             updateIdStr = str(updateId)
-            if (updateId != '[]'):
+            if (updateIdStr != '[]'):
                 updateIdStr = updateIdStr[1:-2]
                 updateDetailSql1 = '''update AirCondition_details
                                       set end_time = ?, end_temp = ?, fee = ?
