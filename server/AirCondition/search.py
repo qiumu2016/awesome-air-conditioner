@@ -100,7 +100,7 @@ class room:
             conn.close()
 
             printMode = 'RDR_{}'
-            with open(printMode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
+            with open(printMode.format(roomid) + '.txt', 'w', encoding='utf-8') as f:
                 f.write(valuesStr)
 
             response['state'] = 'ok'
@@ -480,16 +480,15 @@ def printReport(request): #打印报表
     response = {}
     request_post = json.loads(request.body)
     if request_post:
-        roomid = request_post['room_id']
+        printType = request_post['type']
         connR = sqlite3.connect(dbpath)
         cursorR = connR.cursor()
         queryReportSql = '''select *
                             from AirCondition_report
-                            where room_id = ?
         '''
-        cursorR.execute(queryReportSql,(int(roomid),))
+        cursorR.execute(queryReportSql)
         values = cursorR.fetchall()
-        valuesStr = "".join(values)
+        valuesStr = str(values)
         cursorR.close()
         connR.close()
 
@@ -535,7 +534,6 @@ def printInvoice(request): #打印账单
             f.write(str(roomid) + ' ' + valuesStr)
 
         response['state'] = 'ok'
-
     else:
         response['state'] = 'fail'
     return JsonResponse(response)
