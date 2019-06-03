@@ -96,9 +96,9 @@ class room:
             cursor = conn.cursor()
             queryDetailSql = '''select room_id, start_time, (end_time - start_time), wind, fee_rate, fee
                                 from AirCondition_details
-                                where room_id = ?
+                                where room_id = ? and check_in_time = ?
             '''
-            cursor.execute(queryDetailSql, (int(roomid),))
+            cursor.execute(queryDetailSql, (int(roomid),roomlist[roomid].checkInTime))
             values = cursor.fetchall()
             cursor.close()
             conn.close()
