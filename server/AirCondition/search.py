@@ -323,9 +323,9 @@ def requestOn(request): #顾客请求开机
                     target = i
                     flag = False
                 else:
-                    if cmpwind(target.wind , i.wind) == 2 :
+                    if cmpwind(servicelist[target.dispatchid].wind , servicelist[i.dispatchid].wind) == 2 :
                         target = i
-                    elif cmpwind(target.wind , i.wind) == 1 :
+                    elif cmpwind(servicelist[target.dispatchid].wind , servicelist[i.dispatchid].wind) == 1 :
                         if target.clock > i.clock :
                             target = i
             if cmpwind('mid' , target.wind) == 0: #从队中挤出一个
