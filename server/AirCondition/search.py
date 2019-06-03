@@ -33,6 +33,7 @@ class conditioner:
         self.feeRateL = 0
         self.feeRateM = 0
         self.numServe = 0
+        self.mode = 'cold'
 
     def startUp(self):
         response = {}
@@ -95,7 +96,6 @@ class room:
         self.target_temp = host.targetTemp
         self.fee_rate = feecalc('mid')
         self.dispatchfee = 0.0
-        self.mode = 'cold'
         #waittime
         #waitclock
 
@@ -217,7 +217,7 @@ def changeFanSpeed(request): #顾客更改空调风速
             roomlist[roomid].fee_rate = feecalc(fan)
             
             detailCheckInTime = roomlist[roomid].checkInTime
-            detailModel = roomlist[roomid].mode
+            detailModel = host.mode
             detailCurrentTemp = roomlist[roomid].currentTemp
             detailWind = roomlist[roomid].wind
             detailFeeRate = roomlist[roomid].fee_rate
@@ -320,7 +320,7 @@ def requestOn(request): #顾客请求开机
                 waitlist[roomid] = roomid
                 roomlist[roomid].waitclock = time.time()
                 roomlist[roomid].waittime = -1
-        response['model'] = roomlist[roomid].mode
+        response['model'] = host.mode
         response['target_temp'] =  roomlist[roomid].target_temp
         response['temp_high_limit'] = host.tempHighLimit
         response['temp_low_limit'] = host.tempLowLimit
@@ -538,11 +538,11 @@ def roomUpdate():
             temp = roomlist[j].fee_rate / 60.0
             roomlist[j].fee += temp
             roomlist[j].dispatchfee += temp
-            if roomlist[j].mode == 'cold' :
+            if host.mode == 'cold' :
                 temp = 0.0 - temp
             print(j)
             roomlist[j].currentTemp += temp
-            if (roomlist[j].mode == 'hot' and roomlist[j].currentTemp >= roomlist[j].target_temp) or (roomlist[j].mode == 'cold' and roomlist[j].currentTemp <= roomlist[j].target_temp) : #服务结束
+            if (host.mode == 'hot' and roomlist[j].currentTemp >= roomlist[j].target_temp) or (host.mode == 'cold' and roomlist[j].currentTemp <= roomlist[j].target_temp) : #服务结束
             #服务结束 
                 roomlist[j].currentTemp = roomlist[j].target_temp
                 roomlist[j].isOpen = 0
@@ -617,7 +617,7 @@ def roomUpdate():
             cursor.execute(updateDetailSql, (t2, detailCurrentTemp1, detailFee1, updateId,))
 
             detailCheckInTime2 = roomlist[i].checkInTime
-            detailModel2 = roomlist[i].mode
+            detailModel2 = host.mode
             detailStartTime2 = t2
             detailStartTemp2 = roomlist[i].currentTemp
             detailWind2 = roomlist[i].wind
@@ -651,7 +651,7 @@ def roomUpdate():
         conn = sqlite3.connect(dbpath)
         cursor = conn.cursor()
         detailCheckInTime = roomlist[target].checkInTime
-        detailModel = roomlist[target].mode
+        detailModel = host.mode
         detailStartTime = datetime.datetime.now()
         detailStartTemp = roomlist[target].currentTemp
         detailWind = roomlist[target].wind
