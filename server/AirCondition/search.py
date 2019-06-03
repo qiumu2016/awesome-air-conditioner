@@ -334,7 +334,7 @@ def requestOn(request): #顾客请求开机
                 del servicelist[obj2]
                 waitlist[obj2.id] = obj2
                 obj2.waitclock = time.time()
-                obj2.waittime = 2
+                obj2.waittime = 120
                 roomlist[target.roomid].isServing = 0
                 servicelist[obj.id] = obj
                 serviceobject = serviceobj(roomid) #新建一个服务对象
@@ -346,7 +346,7 @@ def requestOn(request): #顾客请求开机
             elif cmpwind('mid' , target.wind) == 1: #进入等待队列
                 waitlist[obj.id] = obj
                 obj.waitclock = time.time()
-                obj.waittime = 2
+                obj.waittime = 120
             else:
                 waitlist[obj.id] = obj
                 obj.waitclock = time.time()
@@ -589,44 +589,43 @@ def printInvoice(request): #打印账单
     #return JsonResponse(response)
 
 def _update():
-    for i in servicelist.values(): #正在空调服务的房间空调变化
-        for j in serviceobjlist.values():
-            obj = servicelist[j.dispatchid]
-            temp = obj.fee_rate / 60.0
-            obj.fee += temp
-            roomlist[obj.roomid].fee += temp
-            if obj.mode == 'cold' :
-                temp = -temp
-            roomlist[obj.roomid].currentTemp += temp
-            if (obj.mode == 'hot' and roomlist[obj.roomid].currentTemp >= obj.target_temp) or (obj.mode == 'cold' and roomlist[obj.roomid].currentTemp <= obj.target_temp) : #服务结束
-                roomid = obj.roomid
-                roomlist[roomid].currentTemp = obj.target_temp
-                roomlist[roomid].isServing = 0
-                serviceid = roomlist[roomid].serviceid
-                del servicelist[obj.id]
-                del serviceobjlist[serviceid]
+    for j in serviceobjlist.values():#正在空调服务的房间空调变化
+        obj = servicelist[j.dispatchid]
+        temp = obj.fee_rate / 60.0
+        obj.fee += temp
+        roomlist[obj.roomid].fee += temp
+        if obj.mode == 'cold' :
+            temp = -temp
+        roomlist[obj.roomid].currentTemp += temp
+        if (obj.mode == 'hot' and roomlist[obj.roomid].currentTemp >= obj.target_temp) or (obj.mode == 'cold' and roomlist[obj.roomid].currentTemp <= obj.target_temp) : #服务结束
+            roomid = obj.roomid
+            roomlist[roomid].currentTemp = obj.target_temp
+            roomlist[roomid].isServing = 0
+            serviceid = roomlist[roomid].serviceid
+            del servicelist[obj.id]
+            del serviceobjlist[serviceid]
 
-                t2 = datetime.datetime.now()
+            t2 = datetime.datetime.now()
 
-                conn = sqlite3.connect(dbpath)
-                cursor = conn.cursor()
-                queryDetailSql = '''select MAX(id)
-                                    from AirCondition_details
-                                    where room_id = ?
-                '''
-                cursor.execute(queryDetailSql,(int(roomid),))
-                updateIdList = cursor.fetchone()
-                updateIdStr = str(updateIdList)[1:-2]
-                updateId = int(updateIdStr)
-                updateDetailSql = '''update AirCondition_details
-                                        set end_time = ?, end_temp = ?, fee = ?
-                                        where id = ?
-                '''
-                cursor.execute(updateDetailSql, ((t2, roomlist[obj.roomid].currentTemp, obj.fee, updateId),))
+            conn = sqlite3.connect(dbpath)
+            cursor = conn.cursor()
+            queryDetailSql = '''select MAX(id)
+                                from AirCondition_details
+                                where room_id = ?
+            '''
+            cursor.execute(queryDetailSql,(int(roomid),))
+            updateIdList = cursor.fetchone()
+            updateIdStr = str(updateIdList)[1:-2]
+            updateId = int(updateIdStr)
+            updateDetailSql = '''update AirCondition_details
+                                    set end_time = ?, end_temp = ?, fee = ?
+                                    where id = ?
+            '''
+            cursor.execute(updateDetailSql, ((t2, roomlist[obj.roomid].currentTemp, obj.fee, updateId),))
 
-                cursor.close()
-                conn.commit()
-                conn.close()
+            cursor.close()
+            conn.commit()
+            conn.close()
 
 
     for i in waitlist.values() : #等待队列的等待时间减一
