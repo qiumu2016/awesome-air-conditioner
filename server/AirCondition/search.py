@@ -588,8 +588,6 @@ def printInvoice(request): #打印账单
     return response
     #return JsonResponse(response)
 
-dbpath = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'db.sqlite3')
-
 def _update():
     for i in servicelist.values(): #正在空调服务的房间空调变化
         for j in serviceobjlist.values():
