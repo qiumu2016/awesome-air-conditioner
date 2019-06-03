@@ -32,6 +32,7 @@ class conditioner:
         self.feeRateH = 0
         self.feeRateL = 0
         self.feeRateM = 0
+        self.numServe = 0
 
 host = conditioner()
 
@@ -75,11 +76,11 @@ class room:
         self.isCheckIn = 0
         self.isOpen = 0
         self.isServing = 0
-        self.currentTemp = 27
+        self.currentTemp = 27.0
         self.dispatchid = 0
         self.serviceid = 0
         self.checkInTime = 0
-        self.fee = 0
+        self.fee = 0.0
 
     def printRDR(self,request): #打印详单
         #response = {}
@@ -545,7 +546,6 @@ def printInvoice(request): #打印账单
     response = {}
     request_post = json.loads(request.body)
     if request_post:
-        print(roomlist)
         roomid = request_post['room_id']
         roomlist[str(roomid)].isCheckIn = 0
         roomlist[str(roomid)].fee = 0
@@ -595,7 +595,8 @@ def _update():
         obj.fee += temp
         roomlist[obj.roomid].fee += temp
         if obj.mode == 'cold' :
-            temp = -temp
+            temp = 0.0 - temp
+        print(roomlist[obj.roomid])
         roomlist[obj.roomid].currentTemp += temp
         if (obj.mode == 'hot' and roomlist[obj.roomid].currentTemp >= obj.target_temp) or (obj.mode == 'cold' and roomlist[obj.roomid].currentTemp <= obj.target_temp) : #服务结束
             roomid = obj.roomid
