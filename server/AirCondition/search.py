@@ -215,11 +215,11 @@ def changeFanSpeed(request): #顾客更改空调风速
             roomlist[str(roomid)].fee_rate = feecalc(fan)
             
             detailCheckInTime = roomlist[str(roomid)].checkInTime
-            detailModel = obj.mode
+            detailModel = roomlist[str(roomid)].mode
             detailCurrentTemp = roomlist[str(roomid)].currentTemp
-            detailWind = obj.wind
-            detailFeeRate = obj.fee_rate
-            detailFee = obj.fee
+            detailWind = roomlist[str(roomid)].wind
+            detailFeeRate = roomlist[str(roomid)].fee_rate
+            detailFee = roomlist[str(roomid)].dispatchfee
             conn = sqlite3.connect(dbpath)
             cursor = conn.cursor()
             queryDetailSql1 = '''select MAX(id)
@@ -242,7 +242,7 @@ def changeFanSpeed(request): #顾客更改空调风速
                                values
                                (?, ?, ?, '0', ?, 0, ?, 0 ,?, ?, 0)
             '''
-            cursor.execute(addDetailSql1, (detailCheckInTime, int(roomid), detailModel, datetime.datetime.now(),detailCurrentTemp, detailWind, detailFeeRate))
+            cursor.execute(addDetailSql1, (detailCheckInTime, int(roomid), detailModel, t2, detailCurrentTemp, detailWind, detailFeeRate))
             t1 = roomlist[str(roomid)].checkInTime
             s1 = t1.strftime("%Y%m%d%H%M%S")
             i1 = int(s1)
@@ -252,7 +252,6 @@ def changeFanSpeed(request): #顾客更改空调风速
             cursor.close()
             conn.commit()
             conn.close()
-
 
             connR = sqlite3.connect(dbpath)
             cursorR = connR.cursor()
@@ -266,6 +265,7 @@ def changeFanSpeed(request): #顾客更改空调风速
             connR.close()
 
             response['state'] = 'ok'
+            roomlist[str(roomid)].dispatchfee = 0.0
         else:
             response['state'] = 'fail'
     else:
@@ -285,7 +285,7 @@ def requestOn(request): #顾客请求开机
         roomlist[str(roomid)].isOpen = 1
         roomlist[str(roomid)].currentTemp = float(request_post['current_room_temp'])
         if len(servicelist)<host.numServe: #直接进入服务
-            servicelist[str(roomid)] = roomid
+            servicelist[str(roomid)] = str(roomid)
             roomlist[str(roomid)].isServing = 1
         else:
             flag = True
@@ -306,14 +306,14 @@ def requestOn(request): #顾客请求开机
                 target.waitclock = time.time()
                 target.waittime = 120
                 roomlist[target].isServing = 0
-                servicelist[str(roomid)] = roomid
+                servicelist[str(roomid)] = str(roomid)
                 roomlist[str(roomid)].isServing = 1
             elif cmpwind('mid' , roomlist[target].wind) == 1: #进入等待队列
-                waitlist[str(roomid)] = roomid
-                roomlist[roomid].waitclock = time.time()
-                roomlist[roomid].waittime = 120
+                waitlist[str(roomid)] = str(roomid)
+                roomlist[str(roomid)].waitclock = time.time()
+                roomlist[str(roomid)].waittime = 120
             else:
-                waitlist[str(roomid)] = roomid
+                waitlist[str(roomid)] = str(roomid)
                 roomlist[str(roomid)].waitclock = time.time()
                 roomlist[str(roomid)].waittime = -1
         response['modele'] = roomlist[str(roomid)].mode
@@ -360,12 +360,7 @@ def requestOff(request): #顾客关机
     request_post = json.loads(request.body)
     if request_post:
         roomid = request_post['room_id']
-
         roomlist[str(roomid)].currentTemp = request_post['current_room_temp']
-
-        detailCurrentTemp = roomlist[str(roomid)].currentTemp
-        detailFee = roomlist[str(roomid)].dispatchfee
-
         roomlist[str(roomid)].isOpen = 0
 
         if servicelist.__contains__(roomid) :
@@ -374,7 +369,9 @@ def requestOff(request): #顾客关机
             del waitlist[roomid]
         if roomlist[str(roomid)].isServing == 1 :
             roomlist[str(roomid)].isServing = 0
-        response['state'] = 'ok'
+
+        detailCurrentTemp = roomlist[str(roomid)].currentTemp
+        detailFee = roomlist[str(roomid)].dispatchfee
 
         conn = sqlite3.connect(dbpath)
         cursor = conn.cursor()
@@ -411,6 +408,8 @@ def requestOff(request): #顾客关机
         connR.commit()
         connR.close()
 
+        roomlist[str(roomid)].dispatchfee = 0.0
+        response['state'] = 'ok'
     else:
         response['state'] = 'fail'
     return JsonResponse(response)
@@ -529,7 +528,7 @@ def printInvoice(request): #打印账单
     #return JsonResponse(response)
 
 def roomUpdate():
-    for j in roomlist.values():#正在空调服务的房间空调变化
+    for j in roomlist:#正在空调服务的房间空调变化
         if roomlist[j].isServing == 1:
             temp = roomlist[j].fee_rate / 60.0
             roomlist[j].fee += temp
@@ -545,6 +544,8 @@ def roomUpdate():
                 roomlist[j].isServing = 0
                 
                 t2 = datetime.datetime.now()
+                detailCurrentTemp = roomlist[j].currentTemp
+                detailFee = roomlist[j].dispatchfee
 
                 conn = sqlite3.connect(dbpath)
                 cursor = conn.cursor()
@@ -552,20 +553,21 @@ def roomUpdate():
                                     from AirCondition_details
                                     where room_id = ?
                 '''
-                cursor.execute(queryDetailSql,(int(roomid),))
+                cursor.execute(queryDetailSql,(int(j),))
                 updateIdList = cursor.fetchone()
                 updateIdStr = str(updateIdList)[1:-2]
                 updateId = int(updateIdStr)
                 updateDetailSql = '''update AirCondition_details
-                                        set end_time = ?, end_temp = ?, fee = ?
-                                        where id = ?
+                                     set end_time = ?, end_temp = ?, fee = ?
+                                     where id = ?
                 '''
-                cursor.execute(updateDetailSql, (t2, roomlist[obj.roomid].currentTemp, obj.fee, updateId,))
+                cursor.execute(updateDetailSql, (t2, deatilCurrentTemp, detailFee, updateId,))
 
                 cursor.close()
                 conn.commit()
                 conn.close()
-                
+
+                roomlist[j].dispatchfee = 0.0
                 del servicelist[j]
 
     for i in waitlist.values() : #等待队列的等待时间减一
@@ -589,6 +591,44 @@ def roomUpdate():
             servicelist[i] = i
             roomlist[i].isServing = 1
 
+            t2 = datetime.datetime.now()
+            detailCurrentTemp1 = roomlist[target].currentTemp
+            detailFee1 = roomlist[target].dispatchfee
+
+            conn = sqlite3.connect(dbpath)
+            cursor = conn.cursor()
+            queryDetailSql = '''select MAX(id)
+                                from AirCondition_details
+                                where room_id = ?
+            '''
+            cursor.execute(queryDetailSql, (int(target),))
+            updateIdList = cursor.fetchone()
+            updateIdStr = str(updateIdList)[1:-2]
+            updateId = int(updateIdStr)
+            updateDetailSql = '''update AirCondition_details
+                                 set end_time = ?, end_temp = ?, fee = ?
+                                 where id = ?
+             '''
+            cursor.execute(updateDetailSql, (t2, deatilCurrentTemp1, detailFee1, updateId,))
+
+            detailCheckInTime2 = roomlist[i].checkInTime
+            detailModel2 = roomlist[i].mode
+            detailStartTime2 = t2
+            detailStartTemp2 = roomlist[i].currentTemp
+            detailWind2 = roomlist[i].wind
+            detailFeeRate2 = roomlist[i].fee_rate
+            addDetailSql = '''insert into AirCondition_details
+                              (check_in_time, room_id, model, operation, start_time, end_time, start_temp, end_temp, wind, fee_rate, fee)
+                              values
+                              (?, ?, ?, '0', ?, 0, ?, 0, ?, ?, 0)
+            '''
+            cursor.execute(addDetailSql, (detailCheckInTime2, int(i), detailModel2, detailStartTime2, detailStartTemp2, detailWind2, detailFeeRate2,))
+
+            roomlist[i].dispatchfee = 0.0
+            cursor.close()
+            conn.commit()
+            conn.close()
+
     while (len(servicelist)<host.numServe) and (len(waitlist) > 0): #服务队列不满，从等待队列里拿
         flag = True
         target = 0
@@ -602,3 +642,23 @@ def roomUpdate():
         roomlist[target].isServing = 1
         del waitlist[target]
         servicelist[target] = target
+
+        conn = sqlite3.connect(dbpath)
+        cursor = conn.cursor()
+        detailCheckInTime = roomlist[target].checkInTime
+        detailModel = roomlist[target].mode
+        detailStartTime = datetime.datetime.now()
+        detailStartTemp = roomlist[target].currentTemp
+        detailWind = roomlist[target].wind
+        detailFeeRate = roomlist[target].fee_rate
+        addDetailSql = '''insert into AirCondition_details
+                          (check_in_time, room_id, model, operation, start_time, end_time, start_temp, end_temp, wind, fee_rate, fee)
+                          values
+                          (?, ?, ?, '0', ?, 0, ?, 0, ?, ?, 0)
+        '''
+        cursor.execute(addDetailSql, (detailCheckInTime2, int(target), detailModel, detailStartTime, detailStartTemp, detailWind, detailFeeRate,))
+
+        roomlist[target].dispatchfee = 0.0
+        cursor.close()
+        conn.commit()
+        conn.close()
