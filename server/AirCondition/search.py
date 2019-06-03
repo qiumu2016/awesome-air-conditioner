@@ -94,7 +94,7 @@ class room:
                                 where room_id = ?
             '''
             cursor.execute(queryDetailSql, (int(roomid),))
-            values = cursor.fetchone()
+            values = cursor.fetchall()
             valuesStr = str(values)
             cursor.close()
             conn.close()
@@ -115,13 +115,13 @@ class room:
             roomid = request_post['room_id']
             #dateIn = request_post['date_in']
             #dateOut = request_post['date_out']
-            self.isCheckIn = 0
-            dispatchid = self.dispatchid
+            roomlist[roomid].isCheckIn = 0
+            dispatchid = roomlist[roomid].dispatchid
             if waitlist.__contains__(dispatchid) :
                 del waitlist[dispatchid]
             else:
                 del servicelist[dispatchid]
-            serviceid = self.serviceid
+            serviceid = roomlist[roomid].serviceid
             del serviceobjlist[serviceid]
 
             conn = sqlite3.connect(dbpath)
@@ -132,7 +132,7 @@ class room:
             '''
             cursor.execute(queryDetailSql, (int(roomid),))
             values = cursor.fetchone()
-            valuesStr = "".join(values)
+            valuesStr = str(values)
             cursor.close()
             conn.close()
 
