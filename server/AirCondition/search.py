@@ -88,15 +88,13 @@ class room:
         self.isOpen = 0
         self.isServing = 0
         self.currentTemp = 27.0
-        self.dispatchid = 0
         self.checkInTime = 0
         self.fee = 0.0
         self.service = serviceobj(roomid)
         self.wind = 'mid'
         self.target_temp = host.targetTemp
         self.fee_rate = feecalc('mid')
-        self.fee = 0
-        self.dispatchfee = 0
+        self.dispatchfee = 0.0
         self.mode = 'cold'
         #waittime
         #waitclock
@@ -171,14 +169,10 @@ def checkRoomState(request): #查看房间状态
         response['isServing'] = roomlist[str(roomid)].isServing
         if roomlist[str(roomid)].isOpen == 1:
             obj = 0
-            if servicelist.__contains__(roomlist[str(roomid)].dispatchid) :
-                obj = servicelist[roomlist[str(roomid)].dispatchid]
-            else:
-                obj = waitlist[roomlist[str(roomid)].dispatchid]
-            response['wind'] = obj.wind
-            response['target_temp'] = obj.target_temp
-            response['fee_rate'] = obj.fee_rate
-            response['fee'] = obj.fee
+            response['wind'] = roomlist[str(roomid)].wind
+            response['target_temp'] = roomlist[str(roomid)].target_temp
+            response['fee_rate'] = roomlist[str(roomid)].fee_rate
+            response['fee'] = roomlist[str(roomid)].fee
         response['state'] = 'ok'
     else:
         response['state'] = 'fail'
@@ -191,10 +185,7 @@ def changeTargetTemp(request): #顾客更改空调目标温度
         roomid = request_post['room_id']
         temp = request_post['target_temp']
         if roomlist.__contains__(roomid):
-            if roomlist[str(roomid)].isServing == 1 :
-                servicelist[roomlist[str(roomid)].dispatchid].target_temp = temp
-            else:
-                waitlist[roomlist[str(roomid)].dispatchid].target_temp = temp
+            roomlist[roomid].target_temp = temp
             response['state'] = 'ok'
         else:
             response['state'] = 'fail'
@@ -220,18 +211,9 @@ def changeFanSpeed(request): #顾客更改空调风速
         roomid = request_post['room_id']
         fan = request_post['fan_speed']
         if roomlist.__contains__(roomid):
-            obj = 0
-            if roomlist[str(roomid)].isServing == 1 :
-                servicelist[roomlist[str(roomid)].dispatchid].wind = fan
-                servicelist[roomlist[str(roomid)].dispatchid].fee_rate = feecalc(fan)
-
-                obj = servicelist[roomlist[str(roomid)].dispatchid]
-            else:
-                waitlist[roomlist[str(roomid)].dispatchid].wind = fan
-                waitlist[roomlist[str(roomid)].dispatchid].fee_rate = feecalc(fan)
-
-                obj = waitlist[roomlist[str(roomid)].dispatchid]
-
+            roomlist[str(roomid)].wind = fan
+            roomlist[str(roomid)].fee_rate = feecalc(fan)
+            
             detailCheckInTime = roomlist[str(roomid)].checkInTime
             detailModel = obj.mode
             detailCurrentTemp = roomlist[str(roomid)].currentTemp
@@ -333,7 +315,7 @@ def requestOn(request): #顾客请求开机
             else:
                 waitlist[str(roomid)] = roomid
                 roomlist[str(roomid)].waitclock = time.time()
-                roomlist[str(roomid)]waittime = -1
+                roomlist[str(roomid)].waittime = -1
         response['modele'] = roomlist[str(roomid)].mode
         response['target_temp'] =  roomlist[str(roomid)].target_temp
         response['temp_high_limit'] = host.tempHighLimit
@@ -380,23 +362,16 @@ def requestOff(request): #顾客关机
         roomid = request_post['room_id']
 
         roomlist[str(roomid)].currentTemp = request_post['current_room_temp']
-        dispatchid = roomlist[str(roomid)].dispatchid
-
-        if roomlist[str(roomid)].isServing == 1:
-            obj = servicelist[dispatchid]
-        else:
-            obj = waitlist[dispatchid]
 
         detailCurrentTemp = roomlist[str(roomid)].currentTemp
-        detailFee = obj.fee
+        detailFee = roomlist[str(roomid)].dispatchfee
 
-        roomlist[str(roomid)].dispatchid = 0
         roomlist[str(roomid)].isOpen = 0
 
-        if servicelist.__contains__(dispatchid) :
-            del servicelist[dispatchid]
+        if servicelist.__contains__(roomid) :
+            del servicelist[roomid]
         else:
-            del waitlist[dispatchid]
+            del waitlist[roomid]
         if roomlist[str(roomid)].isServing == 1 :
             roomlist[str(roomid)].isServing = 0
         response['state'] = 'ok'
@@ -450,21 +425,11 @@ def requestInfo(request): #每分钟查看一次费用
             response['isOpen'] = roomlist[str(roomid)].isOpen
             response['isServing'] = roomlist[str(roomid)].isServing
             response['current_temp'] = roomlist[str(roomid)].currentTemp
-            if (roomlist[str(roomid)].isOpen == 0):
-                response['state'] = 'ok'
-            else:
-                obj = 0
-                if servicelist.__contains__(roomlist[str(roomid)].dispatchid) :
-                    obj = servicelist[roomlist[str(roomid)].dispatchid]
-                    response['wind'] = obj.wind
-                    response['fee_rate'] = obj.fee_rate
-                    response['fee'] = roomlist[str(roomid)].fee
-                elif waitlist.__contains__(roomlist[str(roomid)].dispatchid) :
-                    obj = waitlist[roomlist[str(roomid)].dispatchid]
-                    response['wind'] = obj.wind
-                    response['fee_rate'] = obj.fee_rate
-                    response['fee'] = roomlist[str(roomid)].fee
-                response['state'] = 'ok'
+            if (roomlist[str(roomid)].isOpen == 1):
+                response['wind'] = roomlist[str(roomid)].wind
+                response['fee_rate'] = roomlist[str(roomid)].fee_rate
+                response['fee'] = roomlist[str(roomid)].fee
+            response['state'] = 'ok'
         else:
             response['state'] = 'fail'
     else:
@@ -565,20 +530,19 @@ def printInvoice(request): #打印账单
 
 def roomUpdate():
     for j in roomlist.values():#正在空调服务的房间空调变化
-        if j.isServing == 1:
-            obj = servicelist[j.dispatchid]
-            temp = obj.fee_rate / 60.0
-            obj.fee += temp
-            roomlist[obj.roomid].fee += temp
-            if obj.mode == 'cold' :
+        if roomlist[j].isServing == 1:
+            temp = roomlist[j].fee_rate / 60.0
+            roomlist[j].fee += temp
+            roomlist[j].dispatchfee += temp
+            if roomlist[j].mode == 'cold' :
                 temp = 0.0 - temp
-            print(roomlist[obj.roomid])
-            roomlist[obj.roomid].currentTemp += temp
-            if (obj.mode == 'hot' and roomlist[obj.roomid].currentTemp >= obj.target_temp) or (obj.mode == 'cold' and roomlist[obj.roomid].currentTemp <= obj.target_temp) : #服务结束
-                roomid = obj.roomid
-                roomlist[roomid].currentTemp = obj.target_temp
-                roomlist[roomid].isOpen = 0
-                roomlist[roomid].isServing = 0
+            print(j)
+            roomlist[j].currentTemp += temp
+            if (roomlist[j].mode == 'hot' and roomlist[j].currentTemp >= roomlist[j].target_temp) or (roomlist[j].mode == 'cold' and roomlist[j].currentTemp <= roomlist[j].target_temp) : #服务结束
+            #服务结束 
+                roomlist[j].currentTemp = roomlist[j].target_temp
+                roomlist[j].isOpen = 0
+                roomlist[j].isServing = 0
                 
                 t2 = datetime.datetime.now()
 
@@ -602,11 +566,11 @@ def roomUpdate():
                 conn.commit()
                 conn.close()
                 
-                del servicelist[obj.id]
+                del servicelist[j]
 
     for i in waitlist.values() : #等待队列的等待时间减一
-        i.waittime -= 1
-        if i.waittime == 0: #已经到时，强行入队
+        roomlist[i].waittime -= 1
+        if roomlist[i].waittime == 0: #已经到时，强行入队
             flag = True 
             target = 0
             for j in servicelist.values() :
@@ -614,28 +578,27 @@ def roomUpdate():
                     flag = False
                     target = j
                 else:
-                    if roomlist[target.roomid].service.clock > roomlist[j.roomid].service.clock :
+                    if roomlist[target].service.clock > roomlist[j].service.clock :
                         target = j
-            del servicelist[target.id]
-            waitlist[target.id] = target
-            target.waitclock = time.time()
-            target.waittime = 120
-            roomlist[target.roomid].isServing = 0
-            del waitlist[i.id]
-            servicelist[i.id] = i
-            roomlist[i.roomid].isServing = 1
+            del servicelist[target]
+            waitlist[target] = target
+            roomlist[target].waitclock = time.time()
+            roomlist[target].waittime = 120
+            roomlist[target].isServing = 0
+            del waitlist[i]
+            servicelist[i] = i
+            roomlist[i].isServing = 1
 
     while (len(servicelist)<host.numServe) and (len(waitlist) > 0): #服务队列不满，从等待队列里拿
-        obj = 0
         flag = True
+        target = 0
         for i in waitlist.values():
             if flag :
                 flag = False
-                obj = i
+                target = i
             else:
-                if i.waitclock < obj.waitclock:
-                    obj = i
-        roomid = obj.roomid
-        roomlist[roomid].isServing = 1
-        del waitlist[obj.id]
-        servicelist[obj.id] = obj
+                if roomlist[i].waitclock < roomlist[target].waitclock:
+                    target = i
+        roomlist[target].isServing = 1
+        del waitlist[target]
+        servicelist[target] = target
