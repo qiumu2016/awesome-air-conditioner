@@ -626,7 +626,7 @@ def _update():
                                     set end_time = ?, end_temp = ?, fee = ?
                                     where id = ?
             '''
-            cursor.execute(updateDetailSql, ((t2, roomlist[obj.roomid].currentTemp, obj.fee, updateId),))
+            cursor.execute(updateDetailSql, (t2, roomlist[obj.roomid].currentTemp, obj.fee, updateId,))
 
             cursor.close()
             conn.commit()
