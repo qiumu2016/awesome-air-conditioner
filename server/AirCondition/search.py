@@ -309,7 +309,7 @@ def requestOn(request): #顾客请求开机
                               values 
                               (?, ?, ?, '0', ?, 0, ?, 0 ,?, ?, 0)
             '''
-            cursor.execute(addDetailSql1, (detailCheckInTime, int(roomid), detailModel, t, detailCurrentTemp, detailWind, detailFeeRate))
+            cursor.execute(addDetailSql, (detailCheckInTime, int(roomid), detailModel, t, detailCurrentTemp, detailWind, detailFeeRate))
             cursor.close()
             conn.commit()
             conn.close()
@@ -365,7 +365,7 @@ def requestOn(request): #顾客请求开机
                                   values 
                                   (?, ?, ?, '0', ?, 0, ?, 0 ,?, ?, 0)
                 '''
-                cursor.execute(addDetailSql1, (detailCheckInTime, int(roomid), detailModel, t, detailCurrentTemp, detailWind, detailFeeRate))
+                cursor.execute(addDetailSql, (detailCheckInTime, int(roomid), detailModel, t, detailCurrentTemp, detailWind, detailFeeRate))
                 cursor.close()
                 conn.commit()
                 conn.close()
