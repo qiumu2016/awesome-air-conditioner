@@ -526,13 +526,13 @@ def printInvoice(request): #打印账单
         '''
         cursor.execute(queryDetailSql, (int(roomid),))
         values = cursor.fetchone()
-        valuesStr = str(values)
+        valuesStr = str(values)[1:-2]
         cursor.close()
         conn.close()
 
         printMode = 'Invoice_{}'
         with open(printMode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
-            f.write(valuesStr)
+            f.write(roomid + valuesStr)
 
         response['state'] = 'ok'
 
