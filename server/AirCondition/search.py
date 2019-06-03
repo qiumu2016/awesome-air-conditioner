@@ -502,18 +502,19 @@ def printReport(request): #打印报表
         response['state'] = 'fail'
     return JsonResponse(response)
 
-def printInvoice(self,request): #打印账单
+def printInvoice(request): #打印账单
     response = {}
     request_post = json.loads(request.body)
     if request_post:
+        print(roomlist)
         roomid = request_post['room_id']
-        roomlist[int(roomid)].isCheckIn = 0
-        dispatchid = roomlist[int(roomid)].dispatchid
+        roomlist[str(roomid)].isCheckIn = 0
+        dispatchid = roomlist[str(roomid)].dispatchid
         if waitlist.__contains__(dispatchid) :
             del waitlist[dispatchid]
         else:
             del servicelist[dispatchid]
-        serviceid = roomlist[int(roomid)].serviceid
+        serviceid = roomlist[str(roomid)].serviceid
         del serviceobjlist[serviceid]
 
         conn = sqlite3.connect(dbpath)

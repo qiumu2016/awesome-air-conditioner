@@ -32,7 +32,7 @@ class PrintRDRView(APIView):
 
 class PrintInvoiceView(APIView):
     def post(self, request):
-        response = search.room.printInvoice(self, request)
+        response = search.printInvoice(request)
         return response
 
 class PrintReportView(APIView):
