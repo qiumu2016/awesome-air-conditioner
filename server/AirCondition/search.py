@@ -1,4 +1,5 @@
 from django.http.response import JsonResponse
+from django.http import FileResponse  
 from django.shortcuts import render_to_response
 import time
 import datetime
@@ -80,7 +81,7 @@ class room:
         self.checkInTime = 0
 
     def printRDR(self,request): #打印详单
-        response = {}
+        #response = {}
         request_post = json.loads(request.body)
         if request_post:
             roomid = request_post['room_id']
@@ -100,13 +101,21 @@ class room:
             conn.close()
 
             printMode = 'RDR_{}'
-            with open(printMode.format(roomid) + '.txt', 'w', encoding='utf-8') as f:
+            filename = printMode.format(roomid) + '.txt'
+            with open(filename, 'w', encoding='utf-8') as f:
                 f.write(valuesStr)
 
-            response['state'] = 'ok'
+            file=open(filename, 'rb')
+            response =FileResponse(file)
+            response['Content-Type']='application/octet-stream'
+            response['Content-Disposition']='attachment;filename="{0}"'.format(filename)
+
+            #response['state'] = 'ok'
         else:
-            response['state'] = 'fail'
-        return JsonResponse(response)
+            #response['state'] = 'fail'
+            print('RDR FAILED')
+        return response
+        #return JsonResponse(response)
 
 
 roomlist = {}
@@ -501,13 +510,21 @@ def printReport(request): #打印报表
         connR.close()
 
         printMode = 'Report_{}'
+        filename = printMode.format(printType) + '.txt'
         with open(printMode.format(printType) + '.txt', 'w', encoding='utf-8') as f:
             f.write(valuesStr)
 
-        response['state'] = 'ok'
+        file=open(filename, 'rb')
+        response =FileResponse(file)
+        response['Content-Type']='application/octet-stream'
+        response['Content-Disposition']='attachment;filename="{0}"'.format(filename)
+
+        #response['state'] = 'ok'
     else:
-        response['state'] = 'fail'
-    return JsonResponse(response)
+        #response['state'] = 'fail'
+        print('REPORT FAILED')
+    return response
+    #return JsonResponse(response)
 
 def printInvoice(request): #打印账单
     response = {}
@@ -538,10 +555,18 @@ def printInvoice(request): #打印账单
         conn.close()
 
         printMode = 'Invoice_{}'
+        filename = printMode.format(roomid) + '.txt'
         with open(printMode.format(roomid) + '.txt', 'w', encoding='utf-8') as f:
             f.write(str(roomid) + ' ' + valuesStr)
 
-        response['state'] = 'ok'
+        file=open(filename, 'rb')
+        response =FileResponse(file)
+        response['Content-Type']='application/octet-stream'
+        response['Content-Disposition']='attachment;filename="{0}"'.format(filename)
+
+        #response['state'] = 'ok'
     else:
-        response['state'] = 'fail'
-    return JsonResponse(response)
+        #response['state'] = 'fail'
+        print('REPORT FAILED')
+    return response
+    #return JsonResponse(response)
