@@ -512,10 +512,11 @@ def printInvoice(request): #打印账单
         dispatchid = roomlist[str(roomid)].dispatchid
         if waitlist.__contains__(dispatchid) :
             del waitlist[dispatchid]
-        else:
+        elif servicelist.__contains__(dispatchid) :
             del servicelist[dispatchid]
         serviceid = roomlist[str(roomid)].serviceid
-        del serviceobjlist[serviceid]
+        if servicelist.__contains__(serviceid) :
+            del serviceobjlist[serviceid]
 
         conn = sqlite3.connect(dbpath)
         cursor = conn.cursor()
