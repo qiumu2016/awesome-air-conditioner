@@ -99,7 +99,7 @@ class room:
         #waittime
         #waitclock
 
-    def printRDR(self,request): #打印详单
+    def printRDR(request): #打印详单
         #response = {}
         request_post = json.loads(request.body)
         if request_post:
@@ -233,6 +233,7 @@ def changeFanSpeed(request): #顾客更改空调风速
             updateId = cursor.fetchone()
             updateIdStr = str(updateId)
             if (updateIdStr != '[]'):
+                print(updateIdStr)
                 updateIdStr = updateIdStr[1:-2]
                 updateDetailSql1 = '''update AirCondition_details
                                       set end_time = ?, end_temp = ?, fee = ?
