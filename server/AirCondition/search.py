@@ -153,8 +153,8 @@ def checkRoomState(request): #查看房间状态
         response['isCheckIn'] = roomlist[roomid].isCheckIn
         response['isOpen'] = roomlist[roomid].isOpen
         response['current_temp'] = roomlist[roomid].currentTemp
+        response['isServing'] = roomlist[roomid].isServing
         if roomlist[roomid].isOpen == 1:
-            response['isServing'] = roomlist[roomid].isServing
             obj = 0
             if servicelist.__contains__(roomlist[roomid].dispatchid) :
                 obj = servicelist[roomlist[roomid].dispatchid]
