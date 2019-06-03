@@ -98,7 +98,7 @@ class room:
                                 from AirCondition_details
                                 where room_id = ? and check_in_time = ?
             '''
-            cursor.execute(queryDetailSql, (int(roomid),roomlist[roomid].checkInTime))
+            cursor.execute(queryDetailSql, (int(roomid),roomlist[str(roomid)].checkInTime))
             values = cursor.fetchall()
             cursor.close()
             conn.close()
@@ -573,11 +573,11 @@ def printInvoice(request): #打印账单
         cursor.close()
         conn.close()
 
-        printStr = 'RoomId,Fee\n'
+        printStr = 'RoomId,Fee/yuan\n'
         printMode = 'Invoice_{}'
         filename = printMode.format(roomid) + '.txt'
         with open(printMode.format(roomid) + '.txt', 'w', encoding='utf-8') as f:
-            f.write(printStr + str(roomid) + ',' + valuesStr + '元')
+            f.write(printStr + str(roomid) + ',' + valuesStr)
 
         file=open(filename, 'rb')
         response =FileResponse(file)
