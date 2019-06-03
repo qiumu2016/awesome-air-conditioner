@@ -15,6 +15,7 @@ class myThread(threading.Thread):
                 for j in search.serviceobjlist.values():
                     obj = search.servicelist[j.dispatchid]
                     temp = obj.fee_rate / 60.0
+                    obj.fee += temp
                     if obj.mode == 'cold' :
                         temp = -temp
                     search.roomlist[obj.roomid].currentTemp += temp
