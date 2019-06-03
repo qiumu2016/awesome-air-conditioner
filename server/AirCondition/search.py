@@ -430,10 +430,9 @@ def requestInfo(request): #每分钟查看一次费用
             response['isOpen'] = roomlist[roomid].isOpen
             response['isServing'] = roomlist[roomid].isServing
             response['current_temp'] = roomlist[roomid].currentTemp
-            if (roomlist[roomid].isOpen == 1):
-                response['wind'] = roomlist[roomid].wind
-                response['fee_rate'] = roomlist[roomid].fee_rate
-                response['fee'] = roomlist[roomid].fee
+            response['wind'] = roomlist[roomid].wind
+            response['fee_rate'] = roomlist[roomid].fee_rate
+            response['fee'] = roomlist[roomid].fee
             response['state'] = 'ok'
         else:
             response['state'] = 'fail'
