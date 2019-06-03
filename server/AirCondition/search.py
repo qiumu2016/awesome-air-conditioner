@@ -494,7 +494,7 @@ def printReport(request): #打印报表
         connR.close()
 
         printMode = 'Report_{}'
-        with open(printMode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
+        with open(printMode.format(roomid) + '.txt', 'w', encoding='utf-8') as f:
             f.write(valuesStr)
 
         response['state'] = 'ok'
@@ -531,8 +531,8 @@ def printInvoice(request): #打印账单
         conn.close()
 
         printMode = 'Invoice_{}'
-        with open(printMode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
-            f.write(roomid + valuesStr)
+        with open(printMode.format(roomid) + '.txt', 'w', encoding='utf-8') as f:
+            f.write(str(roomid) + ' ' + valuesStr)
 
         response['state'] = 'ok'
 
