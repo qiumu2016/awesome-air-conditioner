@@ -604,6 +604,7 @@ def _update():
         if (obj.mode == 'hot' and roomlist[obj.roomid].currentTemp >= obj.target_temp) or (obj.mode == 'cold' and roomlist[obj.roomid].currentTemp <= obj.target_temp) : #服务结束
             roomid = obj.roomid
             roomlist[roomid].currentTemp = obj.target_temp
+            roomlist[roomid].isOpen = 0
             roomlist[roomid].isServing = 0
             serviceid = roomlist[roomid].serviceid
             del servicelist[obj.id]
