@@ -92,6 +92,14 @@ class room:
         self.checkInTime = 0
         self.fee = 0.0
         self.service = serviceobj(roomid)
+        self.wind = 'mid'
+        self.target_temp = host.targetTemp
+        self.fee_rate = feecalc('mid')
+        self.fee = 0
+        self.dispatchfee = 0
+        self.mode = 'cold'
+        #waittime
+        #waitclock
 
     def printRDR(self,request): #打印详单
         #response = {}
@@ -138,23 +146,7 @@ class room:
         #return JsonResponse(response)
 
 
-roomlist = {}
-
-class dispatch:
-    dispatchcount = 0
-    def __init__(self,roomid,wind,temp,fee_rate,mode):
-        dispatch.dispatchcount += 1
-        self.id = dispatch.dispatchcount
-        self.roomid = roomid
-        self.wind = wind
-        self.target_temp = temp
-        self.fee_rate = fee_rate
-        self.fee = 0
-        self.mode = mode
-        #waittime
-        #waitclock
-        #feeprogress
-
+roomlist = {} #房间
 servicelist = {} #调度对象的服务队列
 waitlist = {} #调度对象的等待队列
 
@@ -303,7 +295,6 @@ def requestOn(request): #顾客请求开机
     request_post = json.loads(request.body)
     if request_post:
         roomid = request_post['room_id']
-        obj = dispatch(roomid,'mid',host.targetTemp,feecalc('mid'),'cold') #调度
         if not roomlist.__contains__(roomid):
             roomlist[str(roomid)] = room(roomid)
         if roomlist[str(roomid)].isCheckIn == 0:
@@ -312,8 +303,7 @@ def requestOn(request): #顾客请求开机
         roomlist[str(roomid)].isOpen = 1
         roomlist[str(roomid)].currentTemp = float(request_post['current_room_temp'])
         if len(servicelist)<host.numServe: #直接进入服务
-            servicelist[obj.id] = obj
-            roomlist[str(roomid)].dispatchid = obj.id
+            servicelist[str(roomid)] = roomid
             roomlist[str(roomid)].isServing = 1
         else:
             flag = True
@@ -323,29 +313,29 @@ def requestOn(request): #顾客请求开机
                     target = i
                     flag = False
                 else:
-                    if cmpwind(target.wind , i.wind) == 2 :
+                    if cmpwind(roomlist[target].wind , roomlist[i].wind) == 2 :
                         target = i
-                    elif cmpwind(target.wind , i.wind) == 1 :
-                        if roomlist[target.roomid].service.clock > roomlist[i.roomid].service.clock :
+                    elif cmpwind(roomlist[target].wind , roomlist[i].wind) == 1 :
+                        if roomlist[target].service.clock > roomlist[i].service.clock :
                             target = i
-            if cmpwind('mid' , target.wind) == 0: #从队中挤出一个
-                del servicelist[target.id]
-                waitlist[target.id] = target
+            if cmpwind('mid' , roomlist[target].wind) == 0: #从队中挤出一个
+                del servicelist[target]
+                waitlist[target] = target
                 target.waitclock = time.time()
                 target.waittime = 120
-                roomlist[target.roomid].isServing = 0
-                servicelist[obj.id] = obj
-                roomlist[obj.roomid].isServing = 1
-            elif cmpwind('mid' , target.wind) == 1: #进入等待队列
-                waitlist[obj.id] = obj
-                obj.waitclock = time.time()
-                obj.waittime = 120
+                roomlist[target].isServing = 0
+                servicelist[str(roomid)] = roomid
+                roomlist[str(roomid)].isServing = 1
+            elif cmpwind('mid' , roomlist[target].wind) == 1: #进入等待队列
+                waitlist[str(roomid)] = roomid
+                roomlist[roomid].waitclock = time.time()
+                roomlist[roomid].waittime = 120
             else:
-                waitlist[obj.id] = obj
-                obj.waitclock = time.time()
-                obj.waittime = -1
-        response['modele'] = obj.mode
-        response['target_temp'] =  obj.target_temp
+                waitlist[str(roomid)] = roomid
+                roomlist[str(roomid)].waitclock = time.time()
+                roomlist[str(roomid)]waittime = -1
+        response['modele'] = roomlist[str(roomid)].mode
+        response['target_temp'] =  roomlist[str(roomid)].target_temp
         response['temp_high_limit'] = host.tempHighLimit
         response['temp_low_limit'] = host.tempLowLimit
         response['state'] = 'ok'
