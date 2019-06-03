@@ -168,7 +168,6 @@ def checkRoomState(request): #查看房间状态
         response['current_temp'] = roomlist[str(roomid)].currentTemp
         response['isServing'] = roomlist[str(roomid)].isServing
         if roomlist[str(roomid)].isOpen == 1:
-            obj = 0
             response['wind'] = roomlist[str(roomid)].wind
             response['target_temp'] = roomlist[str(roomid)].target_temp
             response['fee_rate'] = roomlist[str(roomid)].fee_rate
@@ -184,8 +183,8 @@ def changeTargetTemp(request): #顾客更改空调目标温度
     if request_post:
         roomid = request_post['room_id']
         temp = request_post['target_temp']
-        if roomlist.__contains__(roomid):
-            roomlist[roomid].target_temp = temp
+        if roomlist.__contains__(str(roomid)):
+            roomlist[str(roomid)].target_temp = temp
             response['state'] = 'ok'
         else:
             response['state'] = 'fail'
@@ -210,7 +209,7 @@ def changeFanSpeed(request): #顾客更改空调风速
     if request_post:
         roomid = request_post['room_id']
         fan = request_post['fan_speed']
-        if roomlist.__contains__(roomid):
+        if roomlist.__contains__(str(roomid)):
             roomlist[str(roomid)].wind = fan
             roomlist[str(roomid)].fee_rate = feecalc(fan)
             
@@ -363,10 +362,10 @@ def requestOff(request): #顾客关机
         roomlist[str(roomid)].currentTemp = request_post['current_room_temp']
         roomlist[str(roomid)].isOpen = 0
 
-        if servicelist.__contains__(roomid) :
-            del servicelist[roomid]
+        if servicelist.__contains__(str(roomid)) :
+            del servicelist[str(roomid)]
         else:
-            del waitlist[roomid]
+            del waitlist[str(roomid)]
         if roomlist[str(roomid)].isServing == 1 :
             roomlist[str(roomid)].isServing = 0
 
@@ -561,7 +560,7 @@ def roomUpdate():
                                      set end_time = ?, end_temp = ?, fee = ?
                                      where id = ?
                 '''
-                cursor.execute(updateDetailSql, (t2, deatilCurrentTemp, detailFee, updateId,))
+                cursor.execute(updateDetailSql, (t2, detailCurrentTemp, detailFee, updateId,))
 
                 cursor.close()
                 conn.commit()
@@ -609,7 +608,7 @@ def roomUpdate():
                                  set end_time = ?, end_temp = ?, fee = ?
                                  where id = ?
              '''
-            cursor.execute(updateDetailSql, (t2, deatilCurrentTemp1, detailFee1, updateId,))
+            cursor.execute(updateDetailSql, (t2, detailCurrentTemp1, detailFee1, updateId,))
 
             detailCheckInTime2 = roomlist[i].checkInTime
             detailModel2 = roomlist[i].mode
@@ -656,7 +655,7 @@ def roomUpdate():
                           values
                           (?, ?, ?, '0', ?, 0, ?, 0, ?, ?, 0)
         '''
-        cursor.execute(addDetailSql, (detailCheckInTime2, int(target), detailModel, detailStartTime, detailStartTemp, detailWind, detailFeeRate,))
+        cursor.execute(addDetailSql, (detailCheckInTime, int(target), detailModel, detailStartTime, detailStartTemp, detailWind, detailFeeRate,))
 
         roomlist[target].dispatchfee = 0.0
         cursor.close()
