@@ -320,7 +320,7 @@ def requestOn(request): #顾客请求开机
                 waitlist[roomid] = roomid
                 roomlist[roomid].waitclock = time.time()
                 roomlist[roomid].waittime = -1
-        response['modele'] = roomlist[roomid].mode
+        response['model'] = roomlist[roomid].mode
         response['target_temp'] =  roomlist[roomid].target_temp
         response['temp_high_limit'] = host.tempHighLimit
         response['temp_low_limit'] = host.tempLowLimit
