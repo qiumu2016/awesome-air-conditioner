@@ -3,7 +3,7 @@ import time
 import datetime
 from . import search
 import sqlite3
-
+import os
 
 dbpath = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'db.sqlite3')
 
@@ -38,7 +38,7 @@ class myThread(threading.Thread):
                         '''
                         cursor.execute(queryDetailSql,(int(roomid),))
                         updateIdList = cursor.fetchone()
-                        updateIdStr = "".join(updateIdList)
+                        updateIdStr = str(updateIdList)[1:-2]
                         updateId = int(updateIdStr)
                         updateDetailSql = '''update AirCondition_details
                                              set end_time = ?, end_temp = ?, fee = ?
