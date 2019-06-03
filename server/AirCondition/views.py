@@ -7,17 +7,17 @@ from . import search
 
 class PowerOnView(APIView):
     def post(self, request):
-        response = search.powerOn()
+        response = search.host.powerOn()
         return response
 
 class SetParaView(APIView):
     def post(self, request):
-        response = search.setPara(request)
+        response = search.host.setPara(request)
         return response
 
 class StartUpView(APIView):
     def post(self, request):
-        response = search.startUp()
+        response = search.host.startUp()
         return response
 
 class CheckRoomStateView(APIView):
@@ -27,7 +27,7 @@ class CheckRoomStateView(APIView):
 
 class PrintRDRView(APIView):
     def post(self, request):
-        response = search.room.printRDR(self, request)
+        response = search.room.printRDR(request)
         return response
 
 class PrintInvoiceView(APIView):
