@@ -155,7 +155,7 @@ var changeT
         this.roomId = sessionStorage.getItem("roomId")
       },
       changtemp(){
-        if(this.isServing =='未在服务'){
+        if(this.isOpen =='未开机'){
           if(this.shoudong == false&&this.model == '制冷' && this.cur_temp*1 >= (this.set_temp+1)){
               this.c = 0
               window.clearInterval(changeT);
@@ -210,11 +210,11 @@ var changeT
                   this.cur_wind = '弱风'
                 }
                
-                if(response.data.isServing == 1){
+                if(response.data.isOpen == 1){
                    this.cur_temp = response.data.current_temp.toFixed(2)
                 }
                
-                if(this.isServing == this.serve[0] && this.c == 0){
+                if(this.isOpen == this.open[0] && this.c == 0){
                   this.c = 1;
                   changeT = window.setInterval(this.changtemp,1000); 
                 }
