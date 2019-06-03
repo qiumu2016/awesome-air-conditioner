@@ -103,11 +103,26 @@ import userHeader from '@/components/userheader.vue'
                withCredentials: true,
               crossDomain:true,
               changeOrigin: true,
+              responseType: 'blob',
               data : sent
             })
             .then((response) => {    
               if(response.status == 200){
-          
+                const content = response
+                const blob = new Blob([response.data])
+                const fileName = this.rdrForm.roomId+'_详单.txt'
+                if ('download' in document.createElement('a')) { // 非IE下载
+                  const elink = document.createElement('a')
+                  elink.download = fileName
+                  elink.style.display = 'none'
+                  elink.href = URL.createObjectURL(blob)
+                  document.body.appendChild(elink)
+                  elink.click()
+                  URL.revokeObjectURL(elink.href) // 释放URL 对象
+                  document.body.removeChild(elink)
+                  } else { // IE10+下载
+                    navigator.msSaveBlob(blob, fileName)
+                  }
               }
             })
             .catch((error) => {
@@ -137,7 +152,21 @@ import userHeader from '@/components/userheader.vue'
             })
             .then((response) => {    
               if(response.status == 200){
-          
+                const content = response
+                const blob = new Blob([response.data])
+                const fileName = this.invForm.roomId+'_账单.txt'
+                if ('download' in document.createElement('a')) { // 非IE下载
+                  const elink = document.createElement('a')
+                  elink.download = fileName
+                  elink.style.display = 'none'
+                  elink.href = URL.createObjectURL(blob)
+                  document.body.appendChild(elink)
+                  elink.click()
+                  URL.revokeObjectURL(elink.href) // 释放URL 对象
+                  document.body.removeChild(elink)
+                  } else { // IE10+下载
+                    navigator.msSaveBlob(blob, fileName)
+                  }
               }
             })
             .catch((error) => {

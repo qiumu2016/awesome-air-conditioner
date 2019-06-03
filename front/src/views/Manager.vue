@@ -24,10 +24,10 @@
         </el-col>
         <el-col :span="8">
           <div class = "f">
-             <el-radio v-model="radio" label="0">日报表</el-radio>
+             <el-radio disabled v-model="radio" label="0">日报表</el-radio>
              <el-radio v-model="radio" label="1">周报表</el-radio>
-             <el-radio v-model="radio" label="2">月报表</el-radio>
-             <el-radio v-model="radio" label="3">年报表</el-radio>
+             <el-radio disabled v-model="radio" label="2">月报表</el-radio>
+             <el-radio disabled v-model="radio" label="3">年报表</el-radio>
             <div style="padding:10px">
               <el-button  @click="printf_report()" weight='50px' style="background-color:orange;color:white;width:100px">打印报表</el-button>
             </div>
@@ -55,7 +55,7 @@ import userHeader from '@/components/userheader.vue'
       return{
         url:'',
         roomId:'',
-        radio: '0'
+        radio: '1'
       }
     },
     created(){
@@ -85,7 +85,21 @@ import userHeader from '@/components/userheader.vue'
             })
             .then((response) => {    
               if(response.status == 200){
-          
+                const content = response
+                const blob = new Blob([response.data])
+                const fileName = '报表.txt'
+                if ('download' in document.createElement('a')) { // 非IE下载
+                  const elink = document.createElement('a')
+                  elink.download = fileName
+                  elink.style.display = 'none'
+                  elink.href = URL.createObjectURL(blob)
+                  document.body.appendChild(elink)
+                  elink.click()
+                  URL.revokeObjectURL(elink.href) // 释放URL 对象
+                  document.body.removeChild(elink)
+                  } else { // IE10+下载
+                    navigator.msSaveBlob(blob, fileName)
+                  }
               }
             })
             .catch((error) => {

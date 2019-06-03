@@ -80,7 +80,7 @@
   :before-close="handleClose">
   <el-input v-model="outdoor" placeholder="请输入初始温度数值"></el-input>
   <span slot="footer" class="dialog-footer">
-    <el-button @click="set_oritemp()">确 定</el-button>
+    <el-button @click="set_oritemp(outdoor)">确 定</el-button>
   </span>
 </el-dialog>
   </el-container>
@@ -109,7 +109,7 @@ var changeT
        set_temp:24,
        model:'制冷',
        cur_temp:'',
-       set_wind:'强风',
+       set_wind:'中风',
        wind:'low',
        cur_wind:'',
        ispower:'未开机',
@@ -139,13 +139,10 @@ var changeT
       clearInterval(InitSetInterval)
     },
     methods:{
-      test(){
-        this.outdoor++;
-        console.log(this.outdoor)
-      },
-      set_oritemp(){
+      set_oritemp(outdoor){
         console.log(this.outdoor)
         this.dialogVisible = false
+        this.cur_temp = outdoor
         //testT = window.setInterval(this.test,1000); 
       },
       init(){
@@ -190,7 +187,13 @@ var changeT
                 this.isOpen = this.open[response.data.isOpen]
                 this.ispower = this.open[response.data.isOpen]
                 this.isServing = this.serve[response.data.isServing]
-                this.cur_wind = response.data.wind == 'high'?'强风':response.data.wind == 'mid'?'中风':'弱风'
+                if(response.data.wind == 'high'){
+                  this.cur_wind = '强风'
+                }else if(response.data.wind == 'mid'){
+                  this.cur_wind = '中风'
+                }else if(response.data.wind == 'low'){
+                  this.cur_wind = '弱风'
+                }
                 this.cur_temp = response.data.current_temp
                 this.fee_rate = response.data.fee_rate
                 this.fee = response.data.fee
@@ -213,7 +216,7 @@ var changeT
         } else if(this.ispower != '已开机'){
            let sent = {
               room_id :this.roomId,
-              current_room_temp :this.outdoor
+              current_room_temp :this.cur_temp
             }
           this.$ajax({
               type: 'HEAD',
