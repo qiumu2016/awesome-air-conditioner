@@ -100,12 +100,12 @@ class room:
             conn.close()
 
             valuesStr = str(values)
-            printStr = ''
+            printStr = 'RoomId,Time,Duration,FanSpeed,FeeRate,Fee\n'
             for i in range(len(valuesStr)):
                 if (valuesStr[i] == '('):
                     for j in range(i,len(valuesStr)):
                         if(valuesStr[j] == ')'):
-                            printStr = printStr + valuesStr[i : j + 1] + '\n'
+                            printStr = printStr + valuesStr[i + 1 : j] + '\n'
                             break
             printMode = 'RDR_{}'
             filename = printMode.format(roomid) + '.txt'
@@ -516,12 +516,12 @@ def printReport(request): #打印报表
         connR.close()
 
         valuesStr = str(values)
-        printStr = ''
+        printStr = 'Id,RoomId,TimesOfOnOff,Duration,TotalFee,TimesOFDispatch,TimesOfChangeTemp,TimesOfChangeFanSpeed\n'
         for i in range(len(valuesStr)):
             if (valuesStr[i] == '('):
                 for j in range(i, len(valuesStr)):
                     if (valuesStr[j] == ')'):
-                        printStr = printStr + valuesStr[i: j + 1] + '\n'
+                        printStr = printStr + valuesStr[i + 1: j] + '\n'
                         break
 
         printMode = 'Report_{}'
@@ -569,10 +569,11 @@ def printInvoice(request): #打印账单
         cursor.close()
         conn.close()
 
+        printStr = 'RoomId,Fee\n'
         printMode = 'Invoice_{}'
         filename = printMode.format(roomid) + '.txt'
         with open(printMode.format(roomid) + '.txt', 'w', encoding='utf-8') as f:
-            f.write(str(roomid) + ' ' + valuesStr + '元')
+            f.write(printStr + str(roomid) + ',' + valuesStr + '元')
 
         file=open(filename, 'rb')
         response =FileResponse(file)
