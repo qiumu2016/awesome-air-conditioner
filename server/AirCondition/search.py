@@ -108,44 +108,6 @@ class room:
             response['state'] = 'fail'
         return JsonResponse(response)
 
-    def printInvoice(self,request): #打印账单
-        response = {}
-        request_post = json.loads(request.body)
-        if request_post:
-            roomid = request_post['room_id']
-            #dateIn = request_post['date_in']
-            #dateOut = request_post['date_out']
-            roomlist[int(roomid)].isCheckIn = 0
-            dispatchid = roomlist[int(roomid)].dispatchid
-            if waitlist.__contains__(dispatchid) :
-                del waitlist[dispatchid]
-            else:
-                del servicelist[dispatchid]
-            serviceid = roomlist[int(roomid)].serviceid
-            del serviceobjlist[serviceid]
-
-            conn = sqlite3.connect(dbpath)
-            cursor = conn.cursor()
-            queryDetailSql = '''select sum(fee)
-                                from AirCondition_details
-                                where room_id = ?
-            '''
-            cursor.execute(queryDetailSql, (int(roomid),))
-            values = cursor.fetchone()
-            valuesStr = str(values)
-            cursor.close()
-            conn.close()
-
-            printMode = 'Invoice_{}'
-            with open(printMmode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
-                f.write(valuesStr)
-
-            response['state'] = 'ok'
-
-            self.isCheckIn = 0
-        else:
-            response['state'] = 'fail'
-        return JsonResponse(response)
 
 roomlist = {}
 
@@ -536,6 +498,43 @@ def printReport(request): #打印报表
             f.write(valuesStr)
 
         response['state'] = 'ok'
+    else:
+        response['state'] = 'fail'
+    return JsonResponse(response)
+
+def printInvoice(self,request): #打印账单
+    response = {}
+    request_post = json.loads(request.body)
+    if request_post:
+        roomid = request_post['room_id']
+        roomlist[int(roomid)].isCheckIn = 0
+        dispatchid = roomlist[int(roomid)].dispatchid
+        if waitlist.__contains__(dispatchid) :
+            del waitlist[dispatchid]
+        else:
+            del servicelist[dispatchid]
+        serviceid = roomlist[int(roomid)].serviceid
+        del serviceobjlist[serviceid]
+
+        conn = sqlite3.connect(dbpath)
+        cursor = conn.cursor()
+        queryDetailSql = '''select sum(fee)
+                            from AirCondition_details
+                            where room_id = ?
+        '''
+        cursor.execute(queryDetailSql, (int(roomid),))
+        values = cursor.fetchone()
+        valuesStr = str(values)
+        cursor.close()
+        conn.close()
+
+        printMode = 'Invoice_{}'
+        with open(printMmode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
+            f.write(valuesStr)
+
+        response['state'] = 'ok'
+
+        self.isCheckIn = 0
     else:
         response['state'] = 'fail'
     return JsonResponse(response)
