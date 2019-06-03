@@ -499,7 +499,7 @@ def printReport(request): #打印报表
     response = {}
     request_post = json.loads(request.body)
     if request_post:
-        printTypeId = request_post['type']
+        printTypeId = str(request_post['type'])
         if printTypeId == '0' :
             printType = 'Day'
         if printTypeId == '1' :
