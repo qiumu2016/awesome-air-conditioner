@@ -480,7 +480,15 @@ def printReport(request): #打印报表
     response = {}
     request_post = json.loads(request.body)
     if request_post:
-        printType = request_post['type']
+        printTypeId = request_post['type']
+        if printTypeId == '0' :
+            printType = 'Day'
+        if printTypeId == '1' :
+            printType = 'Week'
+        if printTypeId == '2' :
+            printType = 'Month'
+        if printTypeId == '3' :
+            printType = 'Year'
         connR = sqlite3.connect(dbpath)
         cursorR = connR.cursor()
         queryReportSql = '''select *
@@ -493,7 +501,7 @@ def printReport(request): #打印报表
         connR.close()
 
         printMode = 'Report_{}'
-        with open(printMode.format(roomid) + '.txt', 'w', encoding='utf-8') as f:
+        with open(printMode.format(printType) + '.txt', 'w', encoding='utf-8') as f:
             f.write(valuesStr)
 
         response['state'] = 'ok'
