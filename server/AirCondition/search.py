@@ -115,13 +115,13 @@ class room:
             roomid = request_post['room_id']
             #dateIn = request_post['date_in']
             #dateOut = request_post['date_out']
-            roomlist[roomid].isCheckIn = 0
-            dispatchid = roomlist[roomid].dispatchid
+            roomlist[int(roomid)].isCheckIn = 0
+            dispatchid = roomlist[int(roomid)].dispatchid
             if waitlist.__contains__(dispatchid) :
                 del waitlist[dispatchid]
             else:
                 del servicelist[dispatchid]
-            serviceid = roomlist[roomid].serviceid
+            serviceid = roomlist[int(roomid)].serviceid
             del serviceobjlist[serviceid]
 
             conn = sqlite3.connect(dbpath)
