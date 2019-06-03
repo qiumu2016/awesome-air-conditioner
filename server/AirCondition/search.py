@@ -1,4 +1,5 @@
 from django.http.response import JsonResponse
+from django.http import FileResponse  
 from django.shortcuts import render_to_response
 import time
 import datetime
@@ -80,7 +81,7 @@ class room:
         self.checkInTime = 0
 
     def printRDR(self,request): #打印详单
-        response = {}
+        #response = {}
         request_post = json.loads(request.body)
         if request_post:
             roomid = request_post['room_id']
@@ -94,58 +95,28 @@ class room:
                                 where room_id = ?
             '''
             cursor.execute(queryDetailSql, (int(roomid),))
-            values = cursor.fetchone()
+            values = cursor.fetchall()
             valuesStr = str(values)
             cursor.close()
             conn.close()
 
             printMode = 'RDR_{}'
-            with open(printMode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
+            filename = printMode.format(roomid) + '.txt'
+            with open(filename, 'w', encoding='utf-8') as f:
                 f.write(valuesStr)
 
-            response['state'] = 'ok'
+            file=open(filename, 'rb')
+            response =FileResponse(file)
+            response['Content-Type']='application/octet-stream'
+            response['Content-Disposition']='attachment;filename="{0}"'.format(filename)
+
+            #response['state'] = 'ok'
         else:
-            response['state'] = 'fail'
-        return JsonResponse(response)
+            #response['state'] = 'fail'
+            print('RDR FAILED')
+        return response
+        #return JsonResponse(response)
 
-    def printInvoice(self,request): #打印账单
-        response = {}
-        request_post = json.loads(request.body)
-        if request_post:
-            roomid = request_post['room_id']
-            #dateIn = request_post['date_in']
-            #dateOut = request_post['date_out']
-            self.isCheckIn = 0
-            dispatchid = self.dispatchid
-            if waitlist.__contains__(dispatchid) :
-                del waitlist[dispatchid]
-            else:
-                del servicelist[dispatchid]
-            serviceid = self.serviceid
-            del serviceobjlist[serviceid]
-
-            conn = sqlite3.connect(dbpath)
-            cursor = conn.cursor()
-            queryDetailSql = '''select sum(fee)
-                                from AirCondition_details
-                                where room_id = ?
-            '''
-            cursor.execute(queryDetailSql, (int(roomid),))
-            values = cursor.fetchone()
-            valuesStr = "".join(values)
-            cursor.close()
-            conn.close()
-
-            printMode = 'Invoice_{}'
-            with open(printMmode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
-                f.write(valuesStr)
-
-            response['state'] = 'ok'
-
-            self.isCheckIn = 0
-        else:
-            response['state'] = 'fail'
-        return JsonResponse(response)
 
 roomlist = {}
 
@@ -191,8 +162,8 @@ def checkRoomState(request): #查看房间状态
         response['isCheckIn'] = roomlist[roomid].isCheckIn
         response['isOpen'] = roomlist[roomid].isOpen
         response['current_temp'] = roomlist[roomid].currentTemp
+        response['isServing'] = roomlist[roomid].isServing
         if roomlist[roomid].isOpen == 1:
-            response['isServing'] = roomlist[roomid].isServing
             obj = 0
             if servicelist.__contains__(roomlist[roomid].dispatchid) :
                 obj = servicelist[roomlist[roomid].dispatchid]
@@ -270,12 +241,13 @@ def changeFanSpeed(request): #顾客更改空调风速
             '''
             cursor.execute(queryDetailSql1, (int(roomid),))
             updateId = cursor.fetchone()
+            updateIdStr = str(updateId)[1:-2]
             if (updateId != None):
                 updateDetailSql1 = '''update AirCondition_details
                                       set end_time = ?, end_temp = ?, fee = ?
                                       where id = ?
                 '''
-                cursor.execute(updateDetailSql1, (datetime.datetime.now(), detailCurrentTemp, detailFee, int(roomid)))
+                cursor.execute(updateDetailSql1, (datetime.datetime.now(), detailCurrentTemp, detailFee, int(updateIdStr)))
 
             addDetailSql1 = '''insert into AirCondition_details
                                (check_in_time, room_id, model, operation, start_time, end_time, start_temp, end_temp, wind, fee_rate, fee)
@@ -454,6 +426,7 @@ def requestOff(request): #顾客关机
         '''
         cursor.execute(queryDetailSql1, (int(roomid),))
         updateId = cursor.fetchone()
+        updateIdStr = str(updateId)[1:-2]
         t1 = roomlist[roomid].checkInTime
         s1 = t1.strftime("%Y%m%d%H%M%S")
         i1 = int(s1)
@@ -464,7 +437,7 @@ def requestOff(request): #顾客关机
                              set end_time = ?, end_temp = ?,fee = ?
                              where id = ?
         '''
-        cursor.execute(updateDetailSql, ((t2, detailCurrentTemp, detailFee, updateId),))
+        cursor.execute(updateDetailSql, (t2, detailCurrentTemp, detailFee, int(updateIdStr),))
         cursor.close()
         conn.commit()
         conn.close()
@@ -475,7 +448,7 @@ def requestOff(request): #顾客关机
                              set time = time + ? , fee = fee + ?
                              where room_id = ?
         '''
-        cursorR.execute(updateReportSql, (((i2 - i1) / 60, detailFee, int(roomid)),))
+        cursorR.execute(updateReportSql, ((i2 - i1) / 60, detailFee, int(roomid),))
         cursorR.close()
         connR.commit()
         connR.close()
@@ -493,16 +466,19 @@ def requestInfo(request): #每分钟查看一次费用
             response['isCheckIn'] = roomlist[roomid].isCheckIn
             response['isOpen'] = roomlist[roomid].isOpen
             response['isServing'] = roomlist[roomid].isServing
-            obj = 0
-            if servicelist.__contains__(roomlist[roomid].dispatchid) :
-                obj = servicelist[roomlist[roomid].dispatchid]
+            if (roomlist[roomid].isOpen == 0):
+                response['state'] = 'ok'
             else:
-                obj = waitlist[roomlist[roomid].dispatchid]
-            response['wind'] = obj.wind
-            response['current_temp'] = roomlist[roomid].currentTemp
-            response['fee_rate'] = obj.fee_rate
-            response['fee'] = obj.fee
-            response['state'] = 'ok'
+                obj = 0
+                if servicelist.__contains__(roomlist[roomid].dispatchid) :
+                    obj = servicelist[roomlist[roomid].dispatchid]
+                else:
+                    obj = waitlist[roomlist[roomid].dispatchid]
+                response['wind'] = obj.wind
+                response['current_temp'] = roomlist[roomid].currentTemp
+                response['fee_rate'] = obj.fee_rate
+                response['fee'] = obj.fee
+                response['state'] = 'ok'
         else:
             response['state'] = 'fail'
     else:
@@ -513,24 +489,84 @@ def printReport(request): #打印报表
     response = {}
     request_post = json.loads(request.body)
     if request_post:
-        roomid = request_post['room_id']
+        printTypeId = request_post['type']
+        if printTypeId == '0' :
+            printType = 'Day'
+        if printTypeId == '1' :
+            printType = 'Week'
+        if printTypeId == '2' :
+            printType = 'Month'
+        if printTypeId == '3' :
+            printType = 'Year'
         connR = sqlite3.connect(dbpath)
         cursorR = connR.cursor()
         queryReportSql = '''select *
                             from AirCondition_report
-                            where room_id = ?
         '''
-        cursorR.execute(queryReportSql,(int(roomid),))
+        cursorR.execute(queryReportSql)
         values = cursorR.fetchall()
-        valuesStr = "".join(values)
+        valuesStr = str(values)
         cursorR.close()
         connR.close()
 
         printMode = 'Report_{}'
-        with open(printMode.format(roomid) + '.txt', 'a', encoding='utf-8') as f:
+        filename = printMode.format(printType) + '.txt'
+        with open(printMode.format(printType) + '.txt', 'w', encoding='utf-8') as f:
             f.write(valuesStr)
 
-        response['state'] = 'ok'
+        file=open(filename, 'rb')
+        response =FileResponse(file)
+        response['Content-Type']='application/octet-stream'
+        response['Content-Disposition']='attachment;filename="{0}"'.format(filename)
+
+        #response['state'] = 'ok'
     else:
-        response['state'] = 'fail'
-    return JsonResponse(response)
+        #response['state'] = 'fail'
+        print('REPORT FAILED')
+    return response
+    #return JsonResponse(response)
+
+def printInvoice(request): #打印账单
+    response = {}
+    request_post = json.loads(request.body)
+    if request_post:
+        print(roomlist)
+        roomid = request_post['room_id']
+        roomlist[str(roomid)].isCheckIn = 0
+        dispatchid = roomlist[str(roomid)].dispatchid
+        if waitlist.__contains__(dispatchid) :
+            del waitlist[dispatchid]
+        elif servicelist.__contains__(dispatchid) :
+            del servicelist[dispatchid]
+        serviceid = roomlist[str(roomid)].serviceid
+        if servicelist.__contains__(serviceid) :
+            del serviceobjlist[serviceid]
+
+        conn = sqlite3.connect(dbpath)
+        cursor = conn.cursor()
+        queryDetailSql = '''select sum(fee)
+                            from AirCondition_details
+                            where room_id = ?
+        '''
+        cursor.execute(queryDetailSql, (int(roomid),))
+        values = cursor.fetchone()
+        valuesStr = str(values)[1:-2]
+        cursor.close()
+        conn.close()
+
+        printMode = 'Invoice_{}'
+        filename = printMode.format(roomid) + '.txt'
+        with open(printMode.format(roomid) + '.txt', 'w', encoding='utf-8') as f:
+            f.write(str(roomid) + ' ' + valuesStr)
+
+        file=open(filename, 'rb')
+        response =FileResponse(file)
+        response['Content-Type']='application/octet-stream'
+        response['Content-Disposition']='attachment;filename="{0}"'.format(filename)
+
+        #response['state'] = 'ok'
+    else:
+        #response['state'] = 'fail'
+        print('REPORT FAILED')
+    return response
+    #return JsonResponse(response)
