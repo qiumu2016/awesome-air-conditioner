@@ -7,7 +7,7 @@
           class="el-menu-demo" 
           mode="horizontal" 
           active-text-color="#000000"
-          background-color = "#005CAF"
+          background-color = "#FFFFFF"
         >
           <el-col :span="9" :offset="1"><pre></pre></el-col>
 
@@ -113,6 +113,7 @@
           </div>
         </div>
         <div class = 'room'><el-row><span  style="font-size:20px">客房信息</span></el-row>
+        <el-row><span class = "text">房间号码：{{checkId}}</span></el-row>
            <el-row><span class = "text">是否入住：{{isCheckIn}}</span></el-row>
             <el-row><span class = "text">是否开机：{{isOpen}}</span></el-row>
             <el-row><span class = "text">是否服务：{{isServing}}</span></el-row>
@@ -133,6 +134,7 @@
 <script>
 import Myfooter from '@/components/myfooter.vue'
 import userHeader from '@/components/userheader.vue'
+var checkInterval
   export default {
     name:'Costumer',
     components: { 
@@ -151,6 +153,7 @@ import userHeader from '@/components/userheader.vue'
           }
       };
       return{
+        checkId:'',
         url:'',
         roomId:'',
         disabled:true,
@@ -217,10 +220,22 @@ import userHeader from '@/components/userheader.vue'
       check(formName){
         this.$refs[formName].validate((valid) => {
           if (valid) {
-            let sent ={
-              room_id:this.checkForm.roomId.toString()
+            if(checkInterval){
+              window.clearInterval(checkInterval);
             }
-             this.$ajax({
+            this.checkId = this.checkForm.roomId
+            checkInterval = window.setInterval(this.sent_check,2000); 
+          }else{
+            this.$message.error('请检查输入是否正确！');
+              return false;
+            }
+        });
+      },
+      sent_check(){
+        let sent ={
+              room_id:this.checkId.toString()
+            }
+         this.$ajax({
               type: 'HEAD',
               method: 'post',
               url: this.url+'/administrator/check_room_state/',
@@ -234,10 +249,10 @@ import userHeader from '@/components/userheader.vue'
                   this.isCheckIn = this.chechen[response.data.isCheckIn]
                   this.isOpen = this.open[response.data.isOpen]
                   this.isServing = this.serving[response.data.isServing]
-                  this.cur_temp = response.data.current_temp
-                  this.tar_temp = response.data.target_temp
-                  this.fee_rate = response.data.fee_rate
-                  this.fee = response.data.fee
+                  this.cur_temp = response.data.current_temp.toFixed(2)
+                  this.tar_temp = response.data.target_temp.toFixed(2)
+                  this.fee_rate = response.data.fee_rate.toFixed(2)
+                  this.fee = response.data.fee.toFixed(2)
                   if(response.data.wind == 'high'){
                     this.cur_wind = '强风'
                   }else if (response.data.wind == 'mid'){
@@ -250,11 +265,6 @@ import userHeader from '@/components/userheader.vue'
               .catch((error) => {
                 this.$message.error(error.response.data.message);
               })   
-          }else{
-            this.$message.error('请检查输入是否正确！');
-              return false;
-            }
-        });
       },
       set_para(formName){
         
@@ -317,9 +327,10 @@ import userHeader from '@/components/userheader.vue'
               crossDomain:true,
               changeOrigin: true,
             })
-            .then((response) => {    
+            .then((response) => {   
+              this.isPoweron = '已开机' 
               if(response.status == 200){
-                this.isPoweron = '已开机'
+                
               }
             })
             .catch((error) => {

@@ -117,9 +117,6 @@
     created(){
       this.init()
     },
-    mounted(){
-      //console.log(this.$store.getters.isLogin)
-    },
     methods:{
       init(){
         if(sessionStorage.getItem("url") !='null'){
@@ -132,7 +129,7 @@
             sessionStorage.setItem("url",'http://'+this.form.url)
             sessionStorage.setItem("roomId",this.form.roomId)
             this.disable = false;
-            if(this.form.roomId != ''){
+            if(this.form.roomId != null){
               this.roomable = false
             }
           }else {

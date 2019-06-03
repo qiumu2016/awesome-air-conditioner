@@ -7,7 +7,7 @@
           class="el-menu-demo" 
           mode="horizontal" 
           active-text-color="#000000"
-          background-color = "#005CAF"
+          background-color = "#FFFFFF"
         >
           <el-col :span="9" :offset="1"><pre></pre></el-col>
 
@@ -110,7 +110,7 @@ import userHeader from '@/components/userheader.vue'
               if(response.status == 200){
                 const content = response
                 const blob = new Blob([response.data])
-                const fileName = this.rdrForm.roomId+'_详单.txt'
+                const fileName = this.rdrForm.roomId+'_详单.csv'
                 if ('download' in document.createElement('a')) { // 非IE下载
                   const elink = document.createElement('a')
                   elink.download = fileName
@@ -154,7 +154,7 @@ import userHeader from '@/components/userheader.vue'
               if(response.status == 200){
                 const content = response
                 const blob = new Blob([response.data])
-                const fileName = this.invForm.roomId+'_账单.txt'
+                const fileName = this.invForm.roomId+'_账单.csv'
                 if ('download' in document.createElement('a')) { // 非IE下载
                   const elink = document.createElement('a')
                   elink.download = fileName

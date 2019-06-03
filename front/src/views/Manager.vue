@@ -1,5 +1,5 @@
 <template>
-  <el-container>
+  <el-container class ='bg'>
       <el-header>
         <el-row :gutter="20">
         <el-menu 
@@ -7,7 +7,7 @@
           class="el-menu-demo" 
           mode="horizontal" 
           active-text-color="#000000"
-          background-color = "#005CAF"
+          background-color = "#FFFFFF"
         >
           <el-col :span="9" :offset="1"><pre></pre></el-col>
 
@@ -86,8 +86,8 @@ import userHeader from '@/components/userheader.vue'
             .then((response) => {    
               if(response.status == 200){
                 const content = response
-                const blob = new Blob([response.data])
-                const fileName = '报表.txt'
+                const blob = new Blob([content.data])
+                const fileName = '报表.csv'
                 if ('download' in document.createElement('a')) { // 非IE下载
                   const elink = document.createElement('a')
                   elink.download = fileName
