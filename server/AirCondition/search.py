@@ -270,12 +270,13 @@ def changeFanSpeed(request): #顾客更改空调风速
             '''
             cursor.execute(queryDetailSql1, (int(roomid),))
             updateId = cursor.fetchone()
+            updateIdStr = str(updateId)[1:-2]
             if (updateId != None):
                 updateDetailSql1 = '''update AirCondition_details
                                       set end_time = ?, end_temp = ?, fee = ?
                                       where id = ?
                 '''
-                cursor.execute(updateDetailSql1, (datetime.datetime.now(), detailCurrentTemp, detailFee, int(roomid)))
+                cursor.execute(updateDetailSql1, (datetime.datetime.now(), detailCurrentTemp, detailFee, int(updateIdStr)))
 
             addDetailSql1 = '''insert into AirCondition_details
                                (check_in_time, room_id, model, operation, start_time, end_time, start_temp, end_temp, wind, fee_rate, fee)
