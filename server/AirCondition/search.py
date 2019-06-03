@@ -304,8 +304,7 @@ def requestOn(request): #顾客请求开机
             roomlist[str(roomid)].isCheckIn = 1
             roomlist[str(roomid)].checkInTime = datetime.datetime.now()
         roomlist[str(roomid)].isOpen = 1
-        roomlist[str(roomid)].currentTemp = request_post['current_room_temp']
-        roomlist
+        roomlist[str(roomid)].currentTemp = float(request_post['current_room_temp'])
         if len(servicelist)<host.numServe: #直接进入服务
             servicelist[obj.id] = obj
             serviceobject = serviceobj(roomid)
