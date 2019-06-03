@@ -8,6 +8,8 @@ import os
 dbpath = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'db.sqlite3')
 
 class myThread(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
     def run(self):
         while 1:
             time.sleep(1)
@@ -97,6 +99,6 @@ class myThread(threading.Thread):
                 search.serviceobjlist[serviceobject.id] = serviceobject
                 del search.waitlist[obj]
                 search.servicelist[obj.id] = obj
-thread1 = myThread(1, "Thread-1", 1)
+thread1 = myThread()
 
 thread1.start()
