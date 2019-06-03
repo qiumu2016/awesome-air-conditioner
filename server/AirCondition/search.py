@@ -96,14 +96,21 @@ class room:
             '''
             cursor.execute(queryDetailSql, (int(roomid),))
             values = cursor.fetchall()
-            valuesStr = str(values)
             cursor.close()
             conn.close()
 
+            valuesStr = str(values)
+            printStr = ''
+            for i in range(len(valuesStr)):
+                if (valuesStr[i] == '('):
+                    for j in range(i,len(valuesStr)):
+                        if(valuesStr[j] == ')'):
+                            printStr = printStr + valuesStr[i : j + 1] + '\n'
+                            break
             printMode = 'RDR_{}'
             filename = printMode.format(roomid) + '.txt'
             with open(filename, 'w', encoding='utf-8') as f:
-                f.write(valuesStr)
+                f.write(printStr)
 
             file=open(filename, 'rb')
             response =FileResponse(file)
@@ -505,14 +512,22 @@ def printReport(request): #打印报表
         '''
         cursorR.execute(queryReportSql)
         values = cursorR.fetchall()
-        valuesStr = str(values)
         cursorR.close()
         connR.close()
+
+        valuesStr = str(values)
+        printStr = ''
+        for i in range(len(valuesStr)):
+            if (valuesStr[i] == '('):
+                for j in range(i, len(valuesStr)):
+                    if (valuesStr[j] == ')'):
+                        printStr = printStr + valuesStr[i: j + 1] + '\n'
+                        break
 
         printMode = 'Report_{}'
         filename = printMode.format(printType) + '.txt'
         with open(printMode.format(printType) + '.txt', 'w', encoding='utf-8') as f:
-            f.write(valuesStr)
+            f.write(printStr)
 
         file=open(filename, 'rb')
         response =FileResponse(file)
@@ -557,7 +572,7 @@ def printInvoice(request): #打印账单
         printMode = 'Invoice_{}'
         filename = printMode.format(roomid) + '.txt'
         with open(printMode.format(roomid) + '.txt', 'w', encoding='utf-8') as f:
-            f.write(str(roomid) + ' ' + valuesStr)
+            f.write(str(roomid) + ' ' + valuesStr + '元')
 
         file=open(filename, 'rb')
         response =FileResponse(file)
