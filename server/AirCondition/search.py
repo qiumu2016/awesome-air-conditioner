@@ -594,16 +594,16 @@ def printInvoice(request): #打印账单
 def roomUpdate():
     for j in roomlist:#正在空调服务的房间空调变化
         if roomlist[j].isServing == 1:
-            temp = roomlist[j].fee_rate / 60.0
+            temp = float(roomlist[j].fee_rate) / 60.0
             roomlist[j].fee += temp
             roomlist[j].dispatchfee += temp
             if host.mode == 'cold' :
                 temp = 0.0 - temp
             print(j)
             roomlist[j].currentTemp += temp
-            if (host.mode == 'hot' and roomlist[j].currentTemp >= roomlist[j].target_temp) or (host.mode == 'cold' and roomlist[j].currentTemp <= roomlist[j].target_temp) : #服务结束
+            if (host.mode == 'hot' and float(roomlist[j].currentTemp) >= float(roomlist[j].target_temp)) or (host.mode == 'cold' and float(roomlist[j].currentTemp) <= float(roomlist[j].target_temp)) : #服务结束
             #服务结束 
-                roomlist[j].currentTemp = roomlist[j].target_temp
+                roomlist[j].currentTemp = float(roomlist[j].target_temp)
                 roomlist[j].isOpen = 0
                 roomlist[j].isServing = 0
                 
